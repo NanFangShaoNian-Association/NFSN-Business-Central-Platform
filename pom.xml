@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.nfsn</groupId>
+    <artifactId>nfsn-business-central-platform</artifactId>
+    <version>0.0.1</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>platform-common</module>
+        <module>platform-gateway</module>
+        <module>platform-api</module>
+        <module>platform-modules</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
+        <swagger.fox.version>3.0.0</swagger.fox.version>
+        <swagger.core.version>1.6.2</swagger.core.version>
+        <fastjson.version>2.0.34</fastjson.version>
+        <mybatis-plus.version>3.5.0</mybatis-plus.version>
+        <druid.version>1.1.22</druid.version>
+        <mysql.version>8.0.33</mysql.version>
+        <minio.version>8.5.1</minio.version>
+        <spring-cloud.version>2021.0.5</spring-cloud.version>
+        <spring-cloud-alibaba.version>2021.0.5.0</spring-cloud-alibaba.version>
+        <spring-boot-dependencies.version>2.6.13</spring-boot-dependencies.version>
+        <platform.version>0.0.1</platform.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <version>${swagger.fox.version}</version>
+            </dependency>
+
+            <!-- 阿里JSON解析器 -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson.version}</version>
+            </dependency>
+
+            <!--druid数据源-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+
+            <!--minio-->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
+            </dependency>
+
+            <!-- mybatis-plus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>common-swagger</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>common-security</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>common-core</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>common-redis</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>common-datasource</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>user-platform-api</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>chat-platform-api</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>article-platform-api</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+        </dependencies>
+
+    </dependencyManagement>
+
+</project>
