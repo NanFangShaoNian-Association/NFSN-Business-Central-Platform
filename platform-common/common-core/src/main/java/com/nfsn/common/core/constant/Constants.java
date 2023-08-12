@@ -10,5 +10,7 @@ public class Constants {
     public static final Integer FALSE = 0;
     public static final int SUCCESS = 200;
     public static final int FAIL = 500;
+    public static final String SUCCESS_OPERA = "成功";
+    public static final String FAIL_OPERA = "失败";
 
 }
