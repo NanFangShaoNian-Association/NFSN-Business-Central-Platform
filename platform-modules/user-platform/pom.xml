@@ -51,10 +51,13 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.nfsn</groupId>
             <artifactId>common-datasource</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nfsn</groupId>
+            <artifactId>system-api</artifactId>
         </dependency>
     </dependencies>
 

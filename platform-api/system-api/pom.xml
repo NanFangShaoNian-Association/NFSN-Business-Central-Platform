@@ -5,24 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.nfsn</groupId>
-        <artifactId>nfsn-business-central-platform</artifactId>
+        <artifactId>platform-api</artifactId>
         <version>0.0.1</version>
     </parent>
-    <modules>
-        <module>user-platform</module>
-        <module>chat-platform</module>
-        <module>article-platform</module>
-        <module>file</module>
-    </modules>
 
-    <packaging>pom</packaging>
-
-    <artifactId>platform-modules</artifactId>
+    <artifactId>system-api</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.nfsn</groupId>
+            <artifactId>common-core</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
