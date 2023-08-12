@@ -15,6 +15,7 @@
         <module>user-platform-api</module>
         <module>article-platform-api</module>
         <module>chat-platform-api</module>
+        <module>system-api</module>
     </modules>
 
     <properties>

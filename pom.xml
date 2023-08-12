@@ -13,6 +13,7 @@
         <module>platform-gateway</module>
         <module>platform-api</module>
         <module>platform-modules</module>
+        <module>platform-common</module>
     </modules>
 
     <properties>
@@ -26,7 +27,7 @@
         <mybatis-plus.version>3.5.0</mybatis-plus.version>
         <druid.version>1.1.22</druid.version>
         <mysql.version>8.0.33</mysql.version>
-        <minio.version>8.5.1</minio.version>
+        <minio.version>8.0.3</minio.version>
         <spring-cloud.version>2021.0.5</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.0.5.0</spring-cloud-alibaba.version>
         <spring-boot-dependencies.version>2.6.13</spring-boot-dependencies.version>
@@ -133,8 +134,17 @@
                 <artifactId>article-platform-api</artifactId>
                 <version>${platform.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>file</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nfsn</groupId>
+                <artifactId>system-api</artifactId>
+                <version>${platform.version}</version>
+            </dependency>
         </dependencies>
-
     </dependencyManagement>
 
 </project>

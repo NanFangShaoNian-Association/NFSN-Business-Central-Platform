@@ -2,6 +2,10 @@ server:
   port: 8085
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   application:
     name: user-platform-service
   mvc:
@@ -10,24 +14,22 @@ spring:
 
   cloud:
     nacos:
-      server-addr: 192.168.0.104
+      server-addr: 39.108.67.16
       username: nacos
       password: nacos
       discovery:
-        namespace: b495cfe0-da32-4ea0-8e89-762871decd43
-        group: GROUP_01
         service: user-platform-service
 
   # redis 配置
   redis:
     # 地址
-    host: 192.168.0.104
+    host: 39.108.67.16
     # 端口，默认为6379
     port: 6379
     # 数据库索引
     database: 0
     # 密码
-    password:
+    password: nfsn-redis-6379
     # 连接超时时间
     timeout: 10s
     lettuce:
@@ -43,12 +45,18 @@ spring:
   # 数据库相关
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.0.104:3306/vote_active?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://39.108.67.16:3306/nfsn_business_central_platform?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: 242658
+    password: nfsn520
     type: com.alibaba.druid.pool.DruidDataSource
 
 swagger:
   title: 接口配置中心
   version: 1.0
   description: 接口配置中心
+
+minio:
+  endpoint: http://39.108.67.16:9000
+  access-key: IRv1VPs1GveL2R6b
+  secret-key: ImS1KMsGg6hLaWCCuwun4E64RvoGmnZP
+  bucketName: a-bucket
