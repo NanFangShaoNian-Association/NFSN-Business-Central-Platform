@@ -25,7 +25,6 @@ build
 # Log file
 *.log
 #*log*.xml
-*info*
 
 # out
 **/out/
