@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>cn.nfsn</groupId>
+        <artifactId>nfsn-business-central-platform</artifactId>
+        <version>0.0.1</version>
+    </parent>
+    <modules>
+        <module>modules-user</module>
+        <module>modules-chat</module>
+        <module>modules-article</module>
+    </modules>
+
+    <packaging>pom</packaging>
+    <artifactId>BCP-modules</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

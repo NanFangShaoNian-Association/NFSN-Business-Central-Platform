@@ -1,0 +1,24 @@
+server:
+  port: 80
+spring:
+  application:
+    name: BCP-gateway
+  profiles:
+    # 环境配置
+    active: dev
+
+  cloud:
+    nacos:
+      server-addr: 39.108.67.16:8848
+      discovery:
+        service: BCP-gateway
+      config:
+        # 配置中心地址
+        server-addr: 39.108.67.16:8848
+        # 配置文件格式
+        file-extension: yml
+        # 共享配置
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        # 命名空间
+        namespace: 0f367e7a-21d2-4ad7-bff2-30d554e3f2ab
