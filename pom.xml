@@ -4,16 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.nfsn</groupId>
+    <groupId>cn.nfsn</groupId>
     <artifactId>nfsn-business-central-platform</artifactId>
     <version>0.0.1</version>
     <packaging>pom</packaging>
     <modules>
-        <module>platform-common</module>
-        <module>platform-gateway</module>
-        <module>platform-api</module>
-        <module>platform-modules</module>
-        <module>platform-common</module>
+        <module>BCP-common</module>
+        <module>BCP-gateway</module>
+        <module>BCP-api</module>
+        <module>BCP-modules</module>
     </modules>
 
     <properties>
@@ -31,7 +30,8 @@
         <spring-cloud.version>2021.0.5</spring-cloud.version>
         <spring-cloud-alibaba.version>2021.0.5.0</spring-cloud-alibaba.version>
         <spring-boot-dependencies.version>2.6.13</spring-boot-dependencies.version>
-        <platform.version>0.0.1</platform.version>
+        <redisson.version>3.9.1</redisson.version>
+        <BCP.version>0.0.1</BCP.version>
     </properties>
 
     <dependencyManagement>
@@ -87,6 +87,12 @@
                 <version>${minio.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+
             <!-- mybatis-plus -->
             <dependency>
                 <groupId>com.baomidou</groupId>
@@ -95,54 +101,44 @@
             </dependency>
 
             <dependency>
-                <groupId>com.nfsn</groupId>
+                <groupId>cn.nfsn</groupId>
                 <artifactId>common-swagger</artifactId>
-                <version>${platform.version}</version>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
+                <groupId>cn.nfsn</groupId>
                 <artifactId>common-security</artifactId>
-                <version>${platform.version}</version>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
+                <groupId>cn.nfsn</groupId>
                 <artifactId>common-core</artifactId>
-                <version>${platform.version}</version>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
+                <groupId>cn.nfsn</groupId>
                 <artifactId>common-redis</artifactId>
-                <version>${platform.version}</version>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
+                <groupId>cn.nfsn</groupId>
                 <artifactId>common-datasource</artifactId>
-                <version>${platform.version}</version>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
-                <artifactId>user-platform-api</artifactId>
-                <version>${platform.version}</version>
+                <groupId>cn.nfsn</groupId>
+                <artifactId>api-user</artifactId>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
-                <artifactId>chat-platform-api</artifactId>
-                <version>${platform.version}</version>
+                <groupId>cn.nfsn</groupId>
+                <artifactId>api-chat</artifactId>
+                <version>${BCP.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nfsn</groupId>
-                <artifactId>article-platform-api</artifactId>
-                <version>${platform.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.nfsn</groupId>
-                <artifactId>file</artifactId>
-                <version>${platform.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.nfsn</groupId>
-                <artifactId>system-api</artifactId>
-                <version>${platform.version}</version>
+                <groupId>cn.nfsn</groupId>
+                <artifactId>api-article</artifactId>
+                <version>${BCP.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

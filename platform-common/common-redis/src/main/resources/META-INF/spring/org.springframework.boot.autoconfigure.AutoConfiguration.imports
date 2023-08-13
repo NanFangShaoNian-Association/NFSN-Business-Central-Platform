@@ -1,4 +1,0 @@
-com.nfsn.common.redis.config.FastJson2JsonRedisSerializer
-com.nfsn.common.redis.config.RedisConfig
-com.nfsn.common.redis.config.RedissonConfig
-com.nfsn.common.redis.service.RedisCache
