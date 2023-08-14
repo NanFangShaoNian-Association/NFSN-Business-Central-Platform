@@ -9,10 +9,10 @@
     <version>0.0.1</version>
     <packaging>pom</packaging>
     <modules>
-        <module>BCP-common</module>
-        <module>BCP-gateway</module>
-        <module>BCP-api</module>
-        <module>BCP-modules</module>
+        <module>bcp-common</module>
+        <module>bcp-gateway</module>
+        <module>bcp-api</module>
+        <module>bcp-modules</module>
     </modules>
 
     <properties>
