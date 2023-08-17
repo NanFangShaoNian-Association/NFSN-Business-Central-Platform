@@ -10,8 +10,14 @@ public class UserConstants {
     public static final String NORMAL = "0";
 
     /** 注销状态 */
-    public static final String DEREGISTRATION = "1";
+    public static final String LOGOUT = "1";
+
+    /** 取消注销 */
+    public static final String CANCEL_LOGOUT = "2";
 
     /** 用户冻结状态 */
     public static final String USER_DISABLE = "2";
+
+    /** 头像格式 */
+    public static final String AVATAR_FORMAT = "data:image/jpg;base64";
 }

@@ -1,13 +1,16 @@
 package cn.nfsn.user.controller;
 
-import cn.nfsn.common.core.constant.Constants;
 import cn.nfsn.common.core.domain.R;
 import cn.nfsn.common.core.domain.UserInfo;
 import cn.nfsn.common.core.enums.ResultCode;
+import cn.nfsn.common.core.exception.UserOperateException;
+import cn.nfsn.common.core.utils.StringUtils;
 import cn.nfsn.user.service.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 
 /**
  * @Author: gaojianjie
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
     @Autowired
     private UserInfoService userInfoService;
 
@@ -26,21 +30,38 @@ public class UserController {
         return R.ok(userInfoService.queryUserInfo(userId));
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @DeleteMapping("/{userId}")
     public R deRegistration(@PathVariable(value = "userId") String userId){
-        if (userInfoService.deRegistration(userId)) {
-            return R.ok(Constants.SUCCESS_OPERA);
-        }else {
-            return R.fail(ResultCode.INTERNAL_ERROR);
-        }
+        //todo 注销后等待一个周期，期间进行登陆则取消注销操作
+        userInfoService.deRegistration(userId);
+        return R.ok();
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @PostMapping
-    public R registration(@RequestBody UserInfo userInfo){
+    public R<String> registration(@Validated @RequestBody UserInfo userInfo){
+        //todo 注销后的账号重新注册(手机号) 清空原账号信息
         userInfoService.registration(userInfo);
-        return R.ok(Constants.SUCCESS_OPERA);
+        return R.ok();
     }
 
+    @PutMapping
+    public R updateUserInfo(@Validated @RequestBody UserInfo userInfo){
+        if(Objects.isNull(userInfo.getUserId())){
+            //todo log
+            throw new UserOperateException(ResultCode.PARAM_NOT_COMPLETE);
+        }
+        if(!StringUtils.hasText(userInfo.getUserName())){
+            //todo log
+            throw new UserOperateException(ResultCode.PARAM_NOT_COMPLETE);
+        }
+        userInfoService.updateUserInfo(userInfo);
+        return R.ok();
+    }
+
+    @GetMapping("/phone-numbers/{phoneNumber}/exists")
+    public R<Boolean> checkPhoneNumbExit(@PathVariable String phoneNumber){
+        UserInfo result = userInfoService.checkPhoneNumbExit(phoneNumber);
+        boolean bool = result != null;
+        return R.ok(bool);
+    }
 }

@@ -14,6 +14,7 @@ public enum ResultCode {
     PARAM_TYPE_BIND_ERROR(1003,"参数类型错误", HttpStatus.BAD_REQUEST),
     PARAM_NOT_COMPLETE(1004,"参数缺失", HttpStatus.BAD_REQUEST),
     PASSWORD_CONFIRM_ERROR(1005,"两次密码输入不匹配", HttpStatus.BAD_REQUEST),
+
     /*用户错误：2001-2999*/
     USER_NOT_LOGGED_IN(2001,"用户未登录，访问的路径需要验证，请登录", HttpStatus.UNAUTHORIZED),
     USER_LOGIN_ERROR(2002,"账号不存在或密码错误", HttpStatus.UNAUTHORIZED),
@@ -29,6 +30,9 @@ public enum ResultCode {
     HTTP_METHOD_ERROR(3001, "Http请求方法错误", HttpStatus.BAD_REQUEST),
     PHONE_CODE_OOT(3002,"当天手机号发送验证码次数以达到上限，请24小时后重试",HttpStatus.TOO_MANY_REQUESTS),
     SMS_INTERRUPTED_OR_EXECUTION_ERROR(4001,"阿里云服务被中断或执行错误",HttpStatus.BAD_REQUEST),
+    ACCOUNT_FREEZE(4002,"账号暂时冻结",HttpStatus.FORBIDDEN),
+    ACCOUNT_LOGOUT(4003,"账号已注销,请重新注册",HttpStatus.FORBIDDEN),
+    PHONE_NUM_REGISTERED(4004,"手机号已注销",HttpStatus.OK),
 
     /*服务器内部错误*/
     INTERNAL_ERROR(5001,"服务器内部错误，请联系开发人员", HttpStatus.INTERNAL_SERVER_ERROR);

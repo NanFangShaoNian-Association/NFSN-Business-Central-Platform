@@ -14,5 +14,9 @@ public interface UserInfoService extends IService<UserInfo> {
     boolean deRegistration(String userId);
 
     void registration(UserInfo userInfo);
+
+    void updateUserInfo(UserInfo userInfo);
+
+    UserInfo checkPhoneNumbExit(String phoneNumber);
 }
 

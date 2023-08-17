@@ -140,6 +140,11 @@
                 <artifactId>api-article</artifactId>
                 <version>${BCP.version}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.nfsn</groupId>
+                <artifactId>common-MinIO</artifactId>
+                <version>${BCP.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
