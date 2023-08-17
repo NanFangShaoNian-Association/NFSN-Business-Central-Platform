@@ -3,7 +3,6 @@ package cn.nfsn.chat.config;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
-
 import java.util.Date;
 
 /**
@@ -18,6 +17,6 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
 
     @Override
     public void updateFill(MetaObject metaObject) {
-
+        this.setFieldValByName("updateTime",  new Date(), metaObject);
     }
 }

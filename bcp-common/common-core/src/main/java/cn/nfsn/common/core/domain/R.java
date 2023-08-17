@@ -28,12 +28,12 @@ public class R<T> implements Serializable
 
     public static <T> R<T> ok()
     {
-        return restResult(null, SUCCESS, null);
+        return restResult(null, SUCCESS, Constants.SUCCESS_OPERA);
     }
 
     public static <T> R<T> ok(T data)
     {
-        return restResult(data, SUCCESS, null);
+        return restResult(data, SUCCESS, Constants.SUCCESS_OPERA);
     }
 
     public static <T> R<T> ok(T data, String msg)
@@ -43,7 +43,7 @@ public class R<T> implements Serializable
 
     public static <T> R<T> fail()
     {
-        return restResult(null, FAIL, null);
+        return restResult(null, FAIL, Constants.FAIL_OPERA);
     }
 
     public static <T> R<T> fail(String msg)
@@ -53,7 +53,7 @@ public class R<T> implements Serializable
 
     public static <T> R<T> fail(T data)
     {
-        return restResult(data, FAIL, null);
+        return restResult(data, FAIL, Constants.FAIL_OPERA);
     }
 
     public static <T> R<T> fail(T data, String msg)

@@ -26,6 +26,8 @@
             <result property="qqUnionid" column="QQ_unionid" jdbcType="VARCHAR"/>
             <result property="userRegistTime" column="user_regist_time" jdbcType="TIMESTAMP"/>
             <result property="userStatus" column="user_status" jdbcType="TINYINT"/>
+            <result property="updateTime" column="update_time" jdbcType="DATE"/>
+            <result property="logoutStatus" column="logout_status" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -35,6 +37,32 @@
         user_location_region,longitude,latitude,
         wx_openID,qq_openID,login_last_time,
         off_line_last_time,login_last_time_ip,wx_unionid,
-        QQ_unionid,user_regist_time,user_status
+        QQ_unionid,user_regist_time,user_status,update_time,logout_status
     </sql>
+
+    <update id="recoverDefaultInfo">
+        UPDATE nfsn_business_central_platform.user_info
+        SET user_name = '默认用户名',
+            user_role = 0,
+            user_avatar = 'null',
+            email = NULL,
+            user_introduction = NULL,
+            user_location_province = NULL,
+            user_location_city = NULL,
+            user_location_region = NULL,
+            longitude = NULL,
+            latitude = NULL,
+            wx_openID = NULL,
+            qq_openID = NULL,
+            login_last_time = NULL,
+            off_line_last_time = NULL,
+            login_last_time_ip = NULL,
+            wx_unionid = NULL,
+            QQ_unionid = NULL,
+            user_regist_time = NOW(),
+            user_status = 0,
+            update_time = NULL,
+            logout_status = 0
+        WHERE user_id = #{userId};
+    </update>
 </mapper>

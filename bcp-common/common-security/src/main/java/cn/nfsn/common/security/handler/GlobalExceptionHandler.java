@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public R serviceExceptionHandler(SystemServiceException e){
         log.error("抛出业务错误!：{}",e.getMessage());
-        return R.fail(e);
+        return R.fail(e.getResultCode());
     }
 
     /**
