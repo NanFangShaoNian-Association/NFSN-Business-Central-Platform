@@ -9,6 +9,8 @@ import cn.nfsn.common.core.utils.Base64ToMultipartFileUtils;
 import cn.nfsn.common.core.utils.RandomNameUtils;
 import cn.nfsn.common.core.utils.StringUtils;
 import cn.nfsn.common.minio.service.MinioSysFileService;
+import cn.nfsn.common.rocketmq.constant.RocketMQConstants;
+import cn.nfsn.common.rocketmq.service.MQProducerService;
 import cn.nfsn.user.mapper.UserInfoMapper;
 import cn.nfsn.user.service.UserInfoService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -30,8 +32,12 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
     implements UserInfoService {
     @Autowired
     private UserInfoMapper userInfoMapper;
+
     @Autowired
     private MinioSysFileService minioSysFileService;
+
+    @Autowired
+    private MQProducerService mqProducerService;
     @Override
     public UserInfo queryUserInfo(String userId) {
         UserInfo userInfo = this.getById(userId);
@@ -41,11 +47,13 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public boolean deRegistration(String userId) {
+    public void logout(String userId) {
         //将注销状态标记为确认注销,实际上为注销
         LambdaUpdateWrapper<UserInfo> updateWrapper = new LambdaUpdateWrapper<UserInfo>().eq(UserInfo::getUserId, userId).set(UserInfo::getLogoutStatus, UserConstants.LOGOUT);
-        //todo 延迟任务最后判断用户是否注销后进行处理(重新登陆对注销状态进行修改)
-        return this.update(updateWrapper);
+        this.update(updateWrapper);
+        //todo 线程池异步发送
+        //15天后进行注销逻辑
+        mqProducerService.sendDelayMsg(userId,18, RocketMQConstants.DELAY_TOPIC,RocketMQConstants.LOGOUT_DELAY_TAG);
     }
 
     @Override

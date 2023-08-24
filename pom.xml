@@ -13,6 +13,7 @@
         <module>bcp-gateway</module>
         <module>bcp-api</module>
         <module>bcp-modules</module>
+        <module>bcp-common/common-rocketMQ</module>
     </modules>
 
     <properties>
@@ -143,6 +144,11 @@
             <dependency>
                 <groupId>cn.nfsn</groupId>
                 <artifactId>common-MinIO</artifactId>
+                <version>${BCP.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.nfsn</groupId>
+                <artifactId>common-rocketMQ</artifactId>
                 <version>${BCP.version}</version>
             </dependency>
         </dependencies>

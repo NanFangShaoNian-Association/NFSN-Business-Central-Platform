@@ -31,15 +31,13 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public R deRegistration(@PathVariable(value = "userId") String userId){
-        //todo 注销后等待一个周期，期间进行登陆则取消注销操作
-        userInfoService.deRegistration(userId);
+    public R logout(@PathVariable(value = "userId") String userId){
+        userInfoService.logout(userId);
         return R.ok();
     }
 
     @PostMapping
     public R<String> registration(@Validated @RequestBody UserInfo userInfo){
-        //todo 注销后的账号重新注册(手机号) 清空原账号信息
         userInfoService.registration(userInfo);
         return R.ok();
     }
