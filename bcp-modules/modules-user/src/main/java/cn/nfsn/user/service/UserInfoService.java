@@ -11,7 +11,7 @@ import cn.nfsn.common.core.domain.UserInfo;
 public interface UserInfoService extends IService<UserInfo> {
     UserInfo queryUserInfo(String userId);
 
-    boolean deRegistration(String userId);
+    void logout(String userId);
 
     void registration(UserInfo userInfo);
 
