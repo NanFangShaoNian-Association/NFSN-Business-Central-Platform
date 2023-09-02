@@ -195,4 +195,15 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     public static LocalDateTime dateConvertToLocalDateTime(Date date) {
         return date.toInstant().atOffset(ZoneOffset.of("+8")).toLocalDateTime();
     }
+
+    public static Date addDaysToDate(Date date, int daysToAdd) {
+        // 将传入的 java.util.Date 转换为 java.time.LocalDate
+        LocalDate localDate = date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
+        // 增加指定天数
+        LocalDate newLocalDate = localDate.plus(Period.ofDays(daysToAdd));
+
+        // 将新的 LocalDate 转换回 java.util.Date
+        return java.sql.Date.valueOf(newLocalDate);
+    }
 }

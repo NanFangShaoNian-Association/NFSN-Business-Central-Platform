@@ -19,6 +19,8 @@
         <module>common-security</module>
         <module>common-swagger</module>
         <module>common-MinIO</module>
+        <module>common-rocketMQ</module>
+        <module>common-service-aop</module>
     </modules>
 
     <properties>

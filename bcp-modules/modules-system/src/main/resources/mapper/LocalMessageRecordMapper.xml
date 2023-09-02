@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.nfsn.system.mapper.LocalMessageRecordMapper">
+
+    <resultMap id="BaseResultMap" type="cn.nfsn.common.core.domain.LocalMessageRecord">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="service" column="service" jdbcType="VARCHAR"/>
+            <result property="business" column="business" jdbcType="VARCHAR"/>
+            <result property="model" column="model" jdbcType="VARCHAR"/>
+            <result property="topic" column="topic" jdbcType="VARCHAR"/>
+            <result property="tags" column="tags" jdbcType="VARCHAR"/>
+            <result property="msgId" column="msg_id" jdbcType="VARCHAR"/>
+            <result property="msgKey" column="msg_key" jdbcType="VARCHAR"/>
+            <result property="body" column="body" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="maxRetryTimes" column="max_retry_times" jdbcType="TINYINT"/>
+            <result property="currentRetryTimes" column="current_retry_times" jdbcType="TINYINT"/>
+            <result property="sendSuccessTime" column="send_success_time" jdbcType="TIMESTAMP"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="scheduledTime" column="scheduled_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,service,business,
+        model,topic,tags,
+        msg_id,msg_key,body,
+        status,max_retry_times,current_retry_times,
+        send_success_time,create_time,update_time,scheduled_time
+    </sql>
+    <update id="updateMsgRecordByMsgKey">
+        UPDATE nfsn_business_central_platform.local_message_record
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="service != null and service != ''">service = #{service},</if>
+            <if test="business != null and business != ''">business = #{business},</if>
+            <if test="model != null and model != ''">model = #{model},</if>
+            <if test="topic != null and topic != ''">topic = #{topic},</if>
+            <if test="tags != null and tags != ''">tags = #{tags},</if>
+            <if test="msgId != null and msgId != ''">msg_id = #{msgId},</if>
+            <if test="msgKey != null and msgKey != ''">msg_key = #{msgKey},</if>
+            <if test="body != null and body != ''">body = #{body},</if>
+            <if test="maxRetryTimes != null">max_retry_times = #{maxRetryTimes},</if>
+            <if test="currentRetryTimes != null">current_retry_times = #{currentRetryTimes},</if>
+            <if test="sendSuccessTime != null">send_success_time = #{sendSuccessTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="scheduledTime != null">scheduled_time = #{scheduledTime},</if>
+        </set>
+        WHERE msg_key = #{msgKey}
+    </update>
+    <select id="queryFailStateMsgRecord" resultType="cn.nfsn.common.core.domain.LocalMessageRecord">
+        select <include refid="Base_Column_List"/> from nfsn_business_central_platform.local_message_record where status = 1;
+    </select>
+</mapper>
