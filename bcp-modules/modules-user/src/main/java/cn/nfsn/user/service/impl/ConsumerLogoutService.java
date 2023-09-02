@@ -1,13 +1,16 @@
 package cn.nfsn.user.service.impl;
 
 import cn.nfsn.common.core.constant.UserConstants;
+import cn.nfsn.common.core.domain.MqMessage;
 import cn.nfsn.common.core.domain.UserInfo;
 import cn.nfsn.common.rocketmq.constant.RocketMQConstants;
+import cn.nfsn.common.service.aop.anno.MQIdempotency;
 import cn.nfsn.user.service.UserInfoService;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import java.util.Objects;
 
 /**
@@ -17,12 +20,13 @@ import java.util.Objects;
  */
 @Component
 @RocketMQMessageListener(topic = RocketMQConstants.DELAY_TOPIC, selectorExpression = RocketMQConstants.LOGOUT_DELAY_TAG, consumerGroup = "Group1")
-public class ConsumerLogoutService implements RocketMQListener<String> {
+public class ConsumerLogoutService implements RocketMQListener<MqMessage> {
     @Autowired
     private UserInfoService userInfoService;
     @Override
-    public void onMessage(String userId) {
-        UserInfo userInfo = userInfoService.queryUserInfo(userId);
+    @MQIdempotency
+    public void onMessage(MqMessage mqMessage) {
+        UserInfo userInfo = userInfoService.queryUserInfo(mqMessage.getMessageBody());
         if(Objects.isNull(userInfo)){
             //todo log
             return;

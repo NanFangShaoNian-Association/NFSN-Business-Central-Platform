@@ -12,6 +12,7 @@
         <module>modules-user</module>
         <module>modules-chat</module>
         <module>modules-article</module>
+        <module>modules-system</module>
     </modules>
 
     <packaging>pom</packaging>

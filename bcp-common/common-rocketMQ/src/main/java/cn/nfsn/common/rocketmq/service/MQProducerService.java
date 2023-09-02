@@ -1,5 +1,10 @@
 package cn.nfsn.common.rocketmq.service;
 
+import cn.nfsn.common.core.domain.LocalMessageRecord;
+import cn.nfsn.common.core.utils.DateUtils;
+import cn.nfsn.common.rocketmq.enums.EnumMessageSendModel;
+import cn.nfsn.common.rocketmq.enums.EnumMessageStatus;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -7,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
 @Component
 public class MQProducerService {
 
@@ -39,15 +47,13 @@ public class MQProducerService {
      * 发送异步消息（通过线程池执行发送到broker的消息任务，执行完后回调：在SendCallback中可处理相关成功失败时的逻辑）
      * （适合对响应时间敏感的业务场景）
      */
-    public void sendAsyncMsg(String msgBody,String topic) {
-        rocketMQTemplate.asyncSend(topic, MessageBuilder.withPayload(msgBody).build(), new SendCallback() {
+    public void sendAsyncMsg(String msgBody,String topic,String tag) {
+        rocketMQTemplate.asyncSend(topic + ":"+tag, MessageBuilder.withPayload(msgBody).build(), new SendCallback() {
             @Override
             public void onSuccess(SendResult sendResult) {
-                // 处理消息发送成功逻辑
             }
             @Override
             public void onException(Throwable throwable) {
-                // 处理消息发送异常逻辑
             }
         });
     }
@@ -74,6 +80,45 @@ public class MQProducerService {
      */
     public SendResult sendTagMsg(String msgBody,String topic,String tag) {
         return rocketMQTemplate.syncSend(topic + ":"+tag, MessageBuilder.withPayload(msgBody).build());
+    }
+
+
+    /**
+     *返回创建的相关消息记录对象
+     */
+    public LocalMessageRecord getMsgRecord(String topic, String tag,Object value, String serviceName, String businessName) {
+        LocalMessageRecord msgRecord = new LocalMessageRecord();
+        msgRecord.setTopic(topic);
+        msgRecord.setTags(tag);
+        msgRecord.setBody(JSONObject.toJSONString(value));
+        msgRecord.setService(serviceName);
+        msgRecord.setBusiness(businessName);
+        msgRecord.setModel(EnumMessageSendModel.ASYNC.getCode());
+        msgRecord.setCreateTime(DateUtils.getNowDate());
+        msgRecord.setStatus(EnumMessageStatus.SENDING.getCode());
+        msgRecord.setCurrentRetryTimes(0);
+        msgRecord.setMsgKey(UUID.randomUUID().toString());
+
+        return msgRecord;
+    }
+
+    /**
+     * MQ发送成功刷新消息记录为成功 并填充msgId
+     */
+    public LocalMessageRecord asyncMsgRecordOnSuccessHandler(LocalMessageRecord messageRecord,SendResult sendResult){
+        messageRecord.setMsgId(sendResult.getMsgId());
+        messageRecord.setStatus(EnumMessageStatus.SUCCESS.getCode());
+        messageRecord.setSendSuccessTime(DateUtils.getNowDate());
+        return messageRecord;
+    }
+
+    /**
+     *MQ发送失败刷新消息记录为测试中  MQ自动重试 重试次数++
+     */
+    public LocalMessageRecord asyncMsgRecordOnFailHandler(LocalMessageRecord messageRecord){
+        messageRecord.setStatus(EnumMessageStatus.RETRYING.getCode());
+        messageRecord.setCurrentRetryTimes(messageRecord.getCurrentRetryTimes()+1);
+        return messageRecord;
     }
     
 }

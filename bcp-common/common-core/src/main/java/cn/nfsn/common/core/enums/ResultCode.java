@@ -33,9 +33,13 @@ public enum ResultCode {
     ACCOUNT_FREEZE(4002,"账号暂时冻结",HttpStatus.FORBIDDEN),
     ACCOUNT_LOGOUT(4003,"账号已注销,请重新注册",HttpStatus.FORBIDDEN),
     PHONE_NUM_REGISTERED(4004,"手机号已注销",HttpStatus.OK),
+    REQUEST_ID_NULL(4005,"未能读取到有效 requestId", HttpStatus.BAD_REQUEST),
+    //重试请求已被处理
+    IDEMPOTENCY_ERROR(4006,"请求已处理", HttpStatus.OK),
 
     /*服务器内部错误*/
-    INTERNAL_ERROR(5001,"服务器内部错误，请联系开发人员", HttpStatus.INTERNAL_SERVER_ERROR);
+    INTERNAL_ERROR(5001,"服务器内部错误，请联系开发人员", HttpStatus.INTERNAL_SERVER_ERROR),
+    SERVER_BUSY(5001,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS);
 
     /**
      * 状态码

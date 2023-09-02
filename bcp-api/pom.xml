@@ -15,6 +15,7 @@
         <module>api-user</module>
         <module>api-article</module>
         <module>api-chat</module>
+        <module>api-system</module>
     </modules>
 
     <dependencies>

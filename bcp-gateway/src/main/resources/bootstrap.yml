@@ -10,6 +10,8 @@ spring:
   cloud:
     nacos:
       server-addr: 39.108.67.16:8848
+      discovery:
+        namespace: 09b73c2d-c1c4-441f-96da-ca528338c42a
       config:
         # 配置中心地址
         server-addr: 39.108.67.16:8848

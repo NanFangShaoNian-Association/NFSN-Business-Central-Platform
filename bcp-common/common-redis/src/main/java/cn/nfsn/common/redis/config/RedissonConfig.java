@@ -21,7 +21,8 @@ public class RedissonConfig {
 
         Config config = new Config();
         SingleServerConfig singleServerConfig = config.useSingleServer();
-        singleServerConfig.setAddress("redis://192.168.0.104:6379");
+        singleServerConfig.setAddress("redis://39.108.67.16:6379");
+        singleServerConfig.setPassword("nfsn-redis-6379");
         singleServerConfig.setTimeout(3000);
         return Redisson.create(config);
     }
