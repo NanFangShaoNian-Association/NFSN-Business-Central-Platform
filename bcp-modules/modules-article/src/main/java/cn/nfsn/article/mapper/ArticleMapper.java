@@ -4,6 +4,7 @@ import cn.nfsn.article.model.entity.Article;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
+
 /**
 * @author huanghuiyuan
 * @description 针对表【article】的数据库操作Mapper
