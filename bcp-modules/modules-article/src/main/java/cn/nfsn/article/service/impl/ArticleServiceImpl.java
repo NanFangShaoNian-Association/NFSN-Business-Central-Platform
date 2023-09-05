@@ -22,6 +22,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>
     @Resource
     private ArticleMapper articleMapper;
 
+
     @Override
     public void publish(ArticleDTO articleDTO) {
         //获取文章标题和内容
