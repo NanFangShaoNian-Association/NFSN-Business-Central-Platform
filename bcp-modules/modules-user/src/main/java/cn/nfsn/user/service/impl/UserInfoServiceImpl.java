@@ -18,7 +18,6 @@ import cn.nfsn.common.rocketmq.constant.RocketMQConstants;
 import cn.nfsn.common.rocketmq.service.MQProducerService;
 import cn.nfsn.user.mapper.UserInfoMapper;
 import cn.nfsn.user.service.UserInfoService;
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -68,19 +67,19 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void logout(String userId) {
-        //将注销状态标记为确认注销,实际上为注销
+        //将注销状态标记为确认注销,实际上没有注销
         LambdaUpdateWrapper<UserInfo> updateWrapper = new LambdaUpdateWrapper<UserInfo>().eq(UserInfo::getUserId, userId).set(UserInfo::getLogoutStatus, UserConstants.LOGOUT);
         this.update(updateWrapper);
         //15天后进行注销逻辑
         MqMessage mqMessage = new MqMessage(UUID.randomUUID().toString(), userId);
-        mqProducerService.sendDelayMsg(JSON.toJSONString(mqMessage), 5, RocketMQConstants.DELAY_TOPIC, RocketMQConstants.LOGOUT_DELAY_TAG);
         LocalMessageRecord messageRecord = mqProducerService.getMsgRecord(RocketMQConstants.DELAY_TOPIC, RocketMQConstants.LOGOUT_DELAY_TAG,mqMessage.getMessageBody(), Constants.USER_SERVICE, Constants.DELAY_LOGOUT);
         messageRecord.setScheduledTime(DateUtils.addDaysToDate(DateUtils.getNowDate(),15));
         remoteMsgRecordService.saveMsgRecord(messageRecord);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                rocketMQTemplate.asyncSend(messageRecord.getTopic() + ":"+messageRecord.getTags(), MessageBuilder.withPayload(messageRecord.getBody()).build(), new SendCallback() {
+                //异步延迟
+                rocketMQTemplate.asyncSend(messageRecord.getTopic() + ":"+messageRecord.getTags(), MessageBuilder.withPayload(mqMessage).build(), new SendCallback() {
                     @Override
                     public void onSuccess(SendResult sendResult) {
                         remoteMsgRecordService.updateMsgRecord(mqProducerService.asyncMsgRecordOnSuccessHandler(messageRecord,sendResult));
@@ -90,7 +89,7 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
                         //log.error
                         remoteMsgRecordService.updateMsgRecord(mqProducerService.asyncMsgRecordOnFailHandler(messageRecord));
                     }
-                });
+                },mqProducerService.messageTimeOut,5);
             }
         });
     }

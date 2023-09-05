@@ -19,7 +19,7 @@ import java.util.UUID;
 public class MQProducerService {
 
 	@Value("${rocketmq.producer.send-message-timeout}")
-    private Integer messageTimeOut;
+    public Integer messageTimeOut;
     
 	// 直接注入使用，用于发送消息到broker服务器
     @Autowired
@@ -98,7 +98,6 @@ public class MQProducerService {
         msgRecord.setStatus(EnumMessageStatus.SENDING.getCode());
         msgRecord.setCurrentRetryTimes(0);
         msgRecord.setMsgKey(UUID.randomUUID().toString());
-
         return msgRecord;
     }
 
