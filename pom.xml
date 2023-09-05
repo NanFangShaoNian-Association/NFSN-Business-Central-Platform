@@ -32,6 +32,7 @@
         <spring-boot-dependencies.version>2.6.13</spring-boot-dependencies.version>
         <redisson.version>3.9.1</redisson.version>
         <BCP.version>0.0.1</BCP.version>
+        <lombok.version>1.18.24</lombok.version>
     </properties>
 
     <dependencyManagement>
@@ -98,6 +99,13 @@
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <!--lombok   简化实体类开发-->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
 
             <dependency>
