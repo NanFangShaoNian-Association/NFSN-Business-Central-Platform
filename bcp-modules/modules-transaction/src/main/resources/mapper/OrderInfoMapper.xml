@@ -15,12 +15,13 @@
             <result property="orderStatus" column="order_status" jdbcType="VARCHAR"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="paymentType" column="payment_type" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,title,order_no,
         user_id,product_id,total_fee,
         code_url,order_status,create_time,
-        update_time
+        update_time,paymentType
     </sql>
 </mapper>

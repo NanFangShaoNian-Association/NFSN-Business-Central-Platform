@@ -66,6 +66,11 @@ public class OrderInfo implements Serializable {
      */
     private Date updateTime;
 
+    /**
+     * 支付类型
+     */
+    private String paymentType;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }
