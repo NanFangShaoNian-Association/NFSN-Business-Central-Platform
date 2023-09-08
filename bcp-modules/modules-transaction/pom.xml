@@ -77,6 +77,15 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>cn.nfsn</groupId>
+            <artifactId>common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.nfsn</groupId>
+            <artifactId>common-swagger</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
