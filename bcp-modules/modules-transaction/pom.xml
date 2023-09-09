@@ -86,6 +86,10 @@
             <groupId>cn.nfsn</groupId>
             <artifactId>common-swagger</artifactId>
         </dependency>
+        <dependency>
+            <groupId>cn.nfsn</groupId>
+            <artifactId>common-redis</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
