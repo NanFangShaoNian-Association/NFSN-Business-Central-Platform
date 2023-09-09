@@ -33,6 +33,7 @@
         <redisson.version>3.9.1</redisson.version>
         <BCP.version>0.0.1</BCP.version>
         <lombok.version>1.18.24</lombok.version>
+        <hutool.version>5.7.17</hutool.version>
         <httpclient.version>4.5.13</httpclient.version>
         <guava.version>30.1-jre</guava.version>
         <wechatpay-apache-httpclient.version>0.3.0</wechatpay-apache-httpclient.version>
@@ -101,18 +102,22 @@
                 <version>${redisson.version}</version>
             </dependency>
 
-            <!-- mybatis-plus -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
 
-            <!--lombok   简化实体类开发-->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
             </dependency>
 
             <dependency>
