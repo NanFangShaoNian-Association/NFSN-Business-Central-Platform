@@ -17,6 +17,8 @@ spring:
         extension-configs:
           - dataId: bcp-modules-transaction-application-dev.yml
             group: DEFAULT_GROUP
+          - dataId: bcp-modules-transaction-pay-dev.yml
+            group: DEFAULT_GROUP
         # 共享配置
         shared-configs:
           - dataId: bcp-share-application-dev.yml
