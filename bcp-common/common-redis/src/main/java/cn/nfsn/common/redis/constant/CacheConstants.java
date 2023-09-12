@@ -35,4 +35,19 @@ public class CacheConstants {
      * 默认重试休眠时长
      */
     public static final Long NO_TRY_SLEEP_TIME = 0L;
+
+    /**
+     * 线程池大小
+     */
+    public static final int THREAD_POOL_SIZE = 10;
+
+    /**
+     * 缓存空值的存活时间，单位为分钟
+     */
+    public static final Long CACHE_NULL_TTL = 2L;
+
+    /**
+     * 锁前缀
+     */
+    public static final String LOCK_KEY = "lock:";
 }

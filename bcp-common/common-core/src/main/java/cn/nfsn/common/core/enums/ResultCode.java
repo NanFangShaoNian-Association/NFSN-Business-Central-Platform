@@ -39,7 +39,13 @@ public enum ResultCode {
 
     /*服务器内部错误*/
     INTERNAL_ERROR(5001,"服务器内部错误，请联系开发人员", HttpStatus.INTERNAL_SERVER_ERROR),
-    SERVER_BUSY(5001,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS);
+    SERVER_BUSY(5001,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS),
+
+    /*支付状态码*/
+    PRODUCT_OR_PAY_TYPE_NULL(6001,"产品和付款类型不能为空或空", HttpStatus.BAD_REQUEST),
+    CREATE_ORDER_CONTRAST_LOCK_FAIL(6002,"创建订单时校验锁失败", HttpStatus.BAD_REQUEST),
+    INSERT_ORDER_FAIL(6003,"插入订单失败", HttpStatus.BAD_REQUEST),
+    CREATE_ORDER_FAIL(6004,"创建订单失败，请重试", HttpStatus.BAD_REQUEST);
 
     /**
      * 状态码
