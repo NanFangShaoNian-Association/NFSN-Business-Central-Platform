@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.nfsn.system.mapper.AppMapper">
+
+    <resultMap id="BaseResultMap" type="cn.nfsn.system.model.entity.App">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="appName" column="app_name" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="paymentNotifyUrl" column="payment_notify_url" jdbcType="VARCHAR"/>
+            <result property="refundNotifyUrl" column="refund_notify_url" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,app_name,status,
+        payment_notify_url,refund_notify_url
+    </sql>
+</mapper>
