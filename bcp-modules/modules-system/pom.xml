@@ -36,6 +36,10 @@
         </dependency>
         <dependency>
             <groupId>cn.nfsn</groupId>
+            <artifactId>common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.nfsn</groupId>
             <artifactId>common-datasource</artifactId>
         </dependency>
         <dependency>
