@@ -89,10 +89,6 @@
             <groupId>cn.nfsn</groupId>
             <artifactId>common-redis</artifactId>
         </dependency>
-        <dependency>
-            <groupId>cn.nfsn</groupId>
-            <artifactId>modules-system</artifactId>
-        </dependency>
     </dependencies>
 
 </project>
