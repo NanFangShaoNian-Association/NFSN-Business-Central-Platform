@@ -50,18 +50,4 @@ public class ProductDTO {
     @ApiModelProperty(value = "AppID")
     @NotNull(message = "AppID不能为空")
     private Integer appId;
-
-    /**
-     * 支付回调地址
-     */
-    @ApiModelProperty(value = "支付回调地址")
-    @NotNull(message = "支付回调地址不能为空")
-    private String payNotifyUrl;
-
-    /**
-     * 退款回调地址
-     */
-    @ApiModelProperty(value = "退款回调地址")
-    @NotNull(message = "退款回调地址不能为空")
-    private String refundNotifyUrl;
 }

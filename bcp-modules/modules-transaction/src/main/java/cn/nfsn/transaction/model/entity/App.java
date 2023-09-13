@@ -33,12 +33,12 @@ public class App implements Serializable {
     /**
      * 支付结果的回调地址
      */
-    private String paymentNotifyUrl;
+    private String paymentCallBackUrl;
 
     /**
      * 退款结果的回调地址
      */
-    private String refundNotifyUrl;
+    private String refundCallBackUrl;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

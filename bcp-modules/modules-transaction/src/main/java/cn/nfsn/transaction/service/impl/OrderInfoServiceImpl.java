@@ -99,11 +99,11 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
                         // 设置用户id
                         .userId(productDTO.getUserId())
                         // 设置退款回调地址refundCallbackUrl
-                        .refundNotifyUrl(productDTO.getRefundNotifyUrl())
+                        .refundCallBackUrl(app.getRefundCallBackUrl())
                         // 设置支付应用id
                         .appId(app.getId())
                         // 设置支付结果回调地址
-                        .paymentNotifyUrl(app.getPaymentNotifyUrl())
+                        .paymentCallBackUrl(app.getPaymentCallBackUrl())
                         .build();
 
                 //插入数据

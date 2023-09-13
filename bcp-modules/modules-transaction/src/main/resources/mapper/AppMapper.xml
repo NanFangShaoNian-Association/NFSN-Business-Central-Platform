@@ -8,8 +8,8 @@
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="appName" column="app_name" jdbcType="VARCHAR"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="paymentNotifyUrl" column="payment_notify_url" jdbcType="VARCHAR"/>
-            <result property="refundNotifyUrl" column="refund_notify_url" jdbcType="VARCHAR"/>
+            <result property="paymentCallBackUrl" column="payment_call_back_url" jdbcType="VARCHAR"/>
+            <result property="refundCallBackUrl" column="refund_call_back_url" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">

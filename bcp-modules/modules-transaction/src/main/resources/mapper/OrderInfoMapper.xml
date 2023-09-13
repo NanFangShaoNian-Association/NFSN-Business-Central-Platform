@@ -17,8 +17,8 @@
 		<result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
 		<result property="paymentType" column="payment_type" jdbcType="VARCHAR"/>
 		<result property="appId" column="app_id" jdbcType="INTEGER"/>
-		<result property="paymentNotifyUrl" column="payment_notify_url" jdbcType="VARCHAR"/>
-		<result property="refundNotifyUrl" column="refund_notify_url" jdbcType="VARCHAR"/>
+		<result property="paymentCallBackUrl" column="payment_call_back_url" jdbcType="VARCHAR"/>
+		<result property="refundCallBackUrl" column="refund_call_back_url" jdbcType="VARCHAR"/>
 	</resultMap>
 
 	<sql id="Base_Column_List">
