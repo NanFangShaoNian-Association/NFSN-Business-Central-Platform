@@ -3,8 +3,10 @@ package cn.nfsn.common.security.handler;
 import cn.dev33.satoken.exception.*;
 import cn.nfsn.common.core.domain.R;
 import cn.nfsn.common.core.enums.ResultCode;
+import cn.nfsn.common.core.exception.RedisException;
 import cn.nfsn.common.core.exception.SystemServiceException;
 import cn.nfsn.common.core.exception.UserOperateException;
+import cn.nfsn.common.core.exception.WxPayException;
 import cn.nfsn.common.core.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
@@ -65,6 +69,32 @@ public class GlobalExceptionHandler {
         List<ObjectError> allErrors = e.getBindingResult().getAllErrors();
         String message = allErrors.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(";"));
         return R.fail(message);
+    }
+
+    /**
+     * Redis异常拦截
+     *
+     * @param e   RedisException异常对象
+     * @return 返回异常结果
+     */
+    @ExceptionHandler(RedisException.class)
+    @ResponseBody
+    public R redisExceptionHandler(RedisException e) {
+        log.error("出现RedisException异常：", e);
+        return R.fail(e.getResultCode(), null);
+    }
+
+    /**
+     * 微信支付异常拦截
+     *
+     * @param e   WxPayException异常对象
+     * @return 返回异常结果
+     */
+    @ExceptionHandler(WxPayException.class)
+    @ResponseBody
+    public R wxPayExceptionHandler(WxPayException e) {
+        log.error("出现WxPayException异常：", e);
+        return R.fail(e.getResultCode(), null);
     }
 
     /**
@@ -169,6 +199,7 @@ public class GlobalExceptionHandler {
         e.printStackTrace();
         return R.ok(e.getMessage());
     }
+
     /**
      * 处理其他异常
      * @param e
