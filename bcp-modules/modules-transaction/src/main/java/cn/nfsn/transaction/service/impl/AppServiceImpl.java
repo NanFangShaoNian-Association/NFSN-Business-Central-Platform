@@ -1,9 +1,8 @@
 package cn.nfsn.transaction.service.impl;
 
-import cn.nfsn.common.core.constant.ErrorCodeConstants;
 import cn.nfsn.common.core.enums.CommonStatusEnum;
 
-import cn.nfsn.common.core.utils.ServiceExceptionUtil;
+import cn.nfsn.common.core.exception.AppException;
 
 import cn.nfsn.transaction.mapper.AppMapper;
 import cn.nfsn.transaction.model.entity.App;
@@ -12,6 +11,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
+import static cn.nfsn.common.core.enums.ResultCode.APP_IS_DISABLE;
+import static cn.nfsn.common.core.enums.ResultCode.APP_NOT_FOUND;
 
 
 /**
@@ -38,12 +40,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>
 
         // 校验是否存在
         if (app == null) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.APP_NOT_FOUND);
+            throw new AppException(APP_NOT_FOUND);
         }
 
         // 校验是否禁用
         if (CommonStatusEnum.DISABLE.getStatus().equals(app.getStatus())) {
-            throw ServiceExceptionUtil.exception(ErrorCodeConstants.APP_IS_DISABLE);
+            throw new AppException(APP_IS_DISABLE);
         }
 
         return app;
