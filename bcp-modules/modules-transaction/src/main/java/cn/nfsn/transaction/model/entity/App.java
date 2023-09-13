@@ -1,4 +1,4 @@
-package cn.nfsn.system.model.entity;
+package cn.nfsn.transaction.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

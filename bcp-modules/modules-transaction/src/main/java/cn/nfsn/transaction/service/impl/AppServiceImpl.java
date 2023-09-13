@@ -1,11 +1,13 @@
-package cn.nfsn.system.service.impl;
+package cn.nfsn.transaction.service.impl;
 
+import cn.nfsn.common.core.constant.ErrorCodeConstants;
 import cn.nfsn.common.core.enums.CommonStatusEnum;
+
 import cn.nfsn.common.core.utils.ServiceExceptionUtil;
-import cn.nfsn.system.constant.ErrorCodeConstants;
-import cn.nfsn.system.mapper.AppMapper;
-import cn.nfsn.system.model.entity.App;
-import cn.nfsn.system.service.AppService;
+
+import cn.nfsn.transaction.mapper.AppMapper;
+import cn.nfsn.transaction.model.entity.App;
+import cn.nfsn.transaction.service.AppService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 

@@ -1,6 +1,6 @@
-package cn.nfsn.system.service;
+package cn.nfsn.transaction.service;
 
-import cn.nfsn.system.model.entity.App;
+import cn.nfsn.transaction.model.entity.App;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

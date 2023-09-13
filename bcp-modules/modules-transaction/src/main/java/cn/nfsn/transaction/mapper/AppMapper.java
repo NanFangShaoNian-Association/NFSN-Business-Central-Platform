@@ -1,6 +1,6 @@
-package cn.nfsn.system.mapper;
+package cn.nfsn.transaction.mapper;
 
-import cn.nfsn.system.model.entity.App;
+import cn.nfsn.transaction.model.entity.App;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
