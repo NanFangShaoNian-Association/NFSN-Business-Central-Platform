@@ -17,6 +17,8 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -156,6 +158,51 @@ public class ImprovedHttpClientUtil {
         }
         // 返回调用结果
         return result;
+    }
+
+    /**
+     * 将通知参数转化为字符串
+     *
+     * @param request HTTP请求对象
+     * @return 返回将通知参数转化后的字符串结果
+     */
+    public static String readData(HttpServletRequest request) {
+        // 创建一个BufferedReader对象，用于从request中读取数据
+        BufferedReader br = null;
+
+        try {
+            // 创建StringBuilder对象，用于存储读取的数据，并且可以进行高效的字符串拼接
+            StringBuilder result = new StringBuilder();
+
+            // 获取HttpServletRequest对象的Reader
+            br = request.getReader();
+
+            // 循环读取br中的每一行数据，直到没有数据为止
+            for (String line; (line = br.readLine()) != null; ) {
+                // 如果result中已经有数据，那么在新的数据前面添加一个换行符
+                if (result.length() > 0) {
+                    result.append("\n");
+                }
+
+                // 将读取的这一行数据添加到result中
+                result.append(line);
+            }
+
+            // 将存储的数据转换成字符串并返回
+            return result.toString();
+        } catch (IOException e) {
+            // 如果在读取数据过程中出现异常，那么抛出RuntimeException
+            throw new RuntimeException(e);
+        } finally {
+            // 最后，无论是否出现异常，都需要关闭BufferedReader对象
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     /**
