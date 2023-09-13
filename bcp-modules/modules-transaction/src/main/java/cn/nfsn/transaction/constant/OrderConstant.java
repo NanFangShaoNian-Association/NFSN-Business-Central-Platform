@@ -48,4 +48,24 @@ public class OrderConstant {
      * order_info表的支付类型字段名
      */
     public static final String PAYMENT_TYPE = "payment_type";
+
+    /**
+     * order_info表的订单编号字段名
+     */
+    public static final String ORDER_NO = "order_no";
+
+    /**
+     * order_info表的二维码url字段名
+     */
+    public static final String CODE_URL = "code_url";
+
+    /**
+     * 订单号前缀
+     */
+    public static final String ORDER_PREFIX = "ORDER_";
+
+    /**
+     * 退款单号前缀
+     */
+    public static final String REFUND_PREFIX = "REFUND_";
 }
