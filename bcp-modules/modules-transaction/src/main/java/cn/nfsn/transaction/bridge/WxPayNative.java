@@ -82,7 +82,7 @@ public class WxPayNative implements IPayMode {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> createOrder(ProductDTO productDTO) throws Exception {
+    public Object createOrder(ProductDTO productDTO) throws Exception {
         // 打印日志，开始生成订单
         log.info("开始生成订单");
 

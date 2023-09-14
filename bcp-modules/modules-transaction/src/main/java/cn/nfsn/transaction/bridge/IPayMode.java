@@ -23,7 +23,7 @@ public interface IPayMode {
     * @return 返回一个包含订单信息的Map对象
     * @throws Exception 如果在创建订单过程中出现问题，将抛出异常
     */
-   Map<String, Object> createOrder(ProductDTO productDTO) throws Exception;
+   Object createOrder(ProductDTO productDTO) throws Exception;
 
    /**
     * 处理微信支付通知，验证请求的有效性，并进行订单处理.

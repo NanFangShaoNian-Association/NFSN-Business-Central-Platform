@@ -8,7 +8,6 @@ import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
 import cn.nfsn.transaction.service.OrderInfoService;
 import com.google.gson.Gson;
-import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -58,15 +57,20 @@ public class WxPayController {
         PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         // 保存创建订单的结果
-        Map<String, Object> result = null;
+        Object result = null;
 
         // 如果支付方式实例创建成功，调用其创建订单的方法
         if (wxPayNative != null) {
             result = wxPayNative.createOrder(productDTO);
         }
 
-        //返回支付二维码连接和订单号
-        return R.ok(result);
+        // 判断返回的结果类型并进行相应的处理
+        if (result instanceof Map) {
+            //返回支付二维码连接和订单号
+            return R.ok((Map<String, Object>) result);
+        } else {
+            throw new RuntimeException("Unexpected result type: " + result.getClass().getName());
+        }
     }
 
     /**

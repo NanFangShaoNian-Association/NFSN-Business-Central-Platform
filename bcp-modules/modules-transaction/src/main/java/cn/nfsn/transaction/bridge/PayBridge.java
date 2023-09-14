@@ -30,7 +30,7 @@ public abstract class PayBridge {
      * @return 包含code_url 和 订单号的Map
      * @throws Exception 抛出异常
      */
-    public abstract Map<String, Object> createOrder(ProductDTO productDTO) throws Exception;
+    public abstract Object createOrder(ProductDTO productDTO) throws Exception;
 
     /**
      * 处理订单

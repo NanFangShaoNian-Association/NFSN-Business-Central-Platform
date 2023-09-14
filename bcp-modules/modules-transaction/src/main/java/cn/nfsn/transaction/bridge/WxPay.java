@@ -1,25 +1,26 @@
 package cn.nfsn.transaction.bridge;
 
 import cn.nfsn.transaction.model.dto.ProductDTO;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.security.GeneralSecurityException;
 import java.util.Map;
 
 /**
- * @ClassName: WeChat
+ * @ClassName: WxPay
  * @Description: 微信支付类，继承自Pay类，实现了具体的支付逻辑
  * @Author: atnibamaitay
  * @CreateTime: 2023-09-13 17:57
  **/
-@Component
+@Component("wxPay")
 public class WxPay extends PayBridge {
 
    /**
     * 构造函数，初始化支付模式
     * @param payMode 支付模式接口
     */
-   public WxPay(IPayMode payMode) {
+   public WxPay(@Qualifier("wxPayNative") IPayMode payMode) {
       super(payMode);
    }
 
@@ -31,7 +32,7 @@ public class WxPay extends PayBridge {
     * @throws Exception 抛出异常
     */
    @Override
-   public Map<String, Object> createOrder(ProductDTO productDTO) throws Exception {
+   public Object createOrder(ProductDTO productDTO) throws Exception {
       return payMode.createOrder(productDTO);
    }
 
