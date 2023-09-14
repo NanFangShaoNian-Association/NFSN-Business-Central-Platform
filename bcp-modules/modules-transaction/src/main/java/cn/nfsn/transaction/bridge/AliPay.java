@@ -46,4 +46,15 @@ public class AliPay extends PayBridge {
    public void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException {
         payMode.processOrder(bodyMap);
    }
+
+   /**
+    * 取消订单
+    *
+    * @param orderNo 订单号
+    * @throws Exception 抛出异常
+    */
+   @Override
+   public void cancelOrder(String orderNo) throws Exception {
+        payMode.cancelOrder(orderNo);
+   }
 }

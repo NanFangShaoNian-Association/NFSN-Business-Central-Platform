@@ -52,4 +52,12 @@ public abstract class PayBridge {
     public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request) throws IOException, GeneralSecurityException {
         return payMode.handlePaymentNotification(request);
     }
+
+    /**
+     * 取消订单
+     *
+     * @param orderNo    订单号
+     * @throws Exception 抛出异常
+     */
+    public abstract void cancelOrder(String orderNo) throws Exception;
 }

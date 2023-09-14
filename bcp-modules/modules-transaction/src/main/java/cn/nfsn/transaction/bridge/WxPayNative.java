@@ -178,20 +178,25 @@ public class WxPayNative implements IPayMode {
         log.info("请求参数 ===> {}", jsonParams);
 
         // 创建字符串实体，设置编码格式和内容类型
-        StringEntity entity = new StringEntity(jsonParams, "utf-8");
-        entity.setContentType("application/json");
+        StringEntity entity = new StringEntity(jsonParams, UTF8);
+        entity.setContentType(APP_JSON);
 
         // 设置请求实体和头部信息
         httpPost.setEntity(entity);
-        httpPost.setHeader("Accept", "application/json");
+        httpPost.setHeader(ACCEPT, APP_JSON);
 
         // 发送请求并获取响应
         try (CloseableHttpResponse response = wxPayClient.execute(httpPost)) {
-            // 获取响应内容和状态码
-            // 响应体
-            String bodyAsString = EntityUtils.toString(response.getEntity());
             // 响应状态码
             int statusCode = response.getStatusLine().getStatusCode();
+
+            // 获取响应内容和状态码
+            // 响应体
+            String bodyAsString = "";
+            if (entity != null) {
+                // 获取响应内容
+                bodyAsString = EntityUtils.toString(entity);
+            }
 
             // 根据状态码处理响应结果
             if (statusCode == 200) {
@@ -331,6 +336,51 @@ public class WxPayNative implements IPayMode {
         log.info("明文 ===> {}", plainText);
 
         return plainText;
+    }
+
+    /**
+     * 用户取消订单
+     *
+     * @param orderNo    订单号
+     * @throws Exception 抛出异常
+     */
+    @Override
+    public void cancelOrder(String orderNo) throws Exception {
+        // 调用微信支付的关单接口
+        this.closeOrder(orderNo);
+        // 更新商户端的订单状态
+        orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.CANCEL);
+    }
+
+    /**
+     * 调用微信支付的关闭订单接口实现订单的关闭操作。
+     *
+     * @param orderNo 需要关闭的订单编号
+     * @throws Exception 如果网络请求失败或者服务器返回了不成功的HTTP状态码，会抛出此异常
+     */
+    private void closeOrder(String orderNo) throws Exception {
+        // 订单号合法性检查，为空时抛出异常
+        if (orderNo == null || orderNo.isEmpty()) {
+            throw new IllegalArgumentException("订单号不能为空");
+        }
+
+        // 记录开始执行订单关闭操作的日志，记录信息包含订单号
+        log.info("关单接口的调用，订单号 ===> {}", orderNo);
+
+        // 构造一个调用微信支付关闭订单接口的URL, URL中需要包含待关闭的订单编号
+        String url = String.format(WxApiType.CLOSE_ORDER_BY_NO.getType(), orderNo);
+        url = wxPayConfig.getDomain().concat(url);
+
+        // 创建一个Map对象用于存储待发送的请求参数，这里我们只需要设置商户号mchid
+        Map<String, String> paramsMap = new HashMap<>();
+        paramsMap.put("mchid", wxPayConfig.getMchId());
+
+        try {
+            // 使用sendRequest方法发送请求并获取结果
+            sendRequest(url, paramsMap, NATIVE_ORDER);
+        } catch (IOException e) {
+            throw new Exception("关闭订单失败，订单号：" + orderNo, e);
+        }
     }
 
 }

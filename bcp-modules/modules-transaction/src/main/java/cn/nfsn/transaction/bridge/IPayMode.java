@@ -20,7 +20,7 @@ public interface IPayMode {
    /**
     * 创建订单的方法
     * @param productDTO 商品数据传输对象,包含商品相关信息
-    * @return 返回一个包含订单信息的Map对象
+    * @return           返回一个包含订单信息的Map对象
     * @throws Exception 如果在创建订单过程中出现问题，将抛出异常
     */
    Object createOrder(ProductDTO productDTO) throws Exception;
@@ -29,18 +29,26 @@ public interface IPayMode {
     * 处理微信支付通知，验证请求的有效性，并进行订单处理.
     *
     * @param request HttpServletRequest 对象，表示一个 HTTP 请求
-    * @return ResponseWxPayNotifyDTO 响应对象，包含响应码和信息
-    * @throws IOException              如果读取请求数据时出错
-    * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
+    * @return ResponseWxPayNotifyDTO    响应对象，包含响应码和信息
+    * @throws IOException               如果读取请求数据时出错
+    * @throws GeneralSecurityException  如果在验证签名过程中出现安全异常
     */
    ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request) throws IOException, GeneralSecurityException;
 
    /**
     * 处理订单
     *
-    * @param bodyMap 请求体Map
+    * @param bodyMap                   请求体Map
     * @throws GeneralSecurityException 抛出安全异常
     */
    @Transactional(rollbackFor = Exception.class)
    void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException;
+
+   /**
+    * 取消订单
+    *
+    * @param orderNo    订单号
+    * @throws Exception 抛出异常
+    */
+    void cancelOrder(String orderNo) throws Exception;
 }

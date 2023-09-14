@@ -131,4 +131,28 @@ public class WxPayController {
 
     }
 
+    /**
+     * 用户取消订单
+     *
+     * @param orderNo 订单编号
+     * @return R对象，包含操作结果信息
+     * @throws Exception 可能出现的异常
+     */
+    @ApiOperation("用户取消订单")
+    @PostMapping("/cancel/{orderNo}")
+    public R cancel(@PathVariable String orderNo) throws Exception {
+
+        // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
+        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+
+        // 记录日志，标记正在进行的操作为"取消订单"
+        log.info("取消订单");
+
+        // 调用支付服务，进行订单取消操作
+        wxPayNative.cancelOrder(orderNo);
+
+        // 返回成功响应，附带消息为"订单已取消"
+        return R.ok("订单已取消");
+    }
+
 }

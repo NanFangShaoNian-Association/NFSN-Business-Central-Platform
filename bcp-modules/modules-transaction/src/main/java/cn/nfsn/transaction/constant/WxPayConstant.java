@@ -37,4 +37,24 @@ public class WxPayConstant {
      * 通知验签失败信息
      */
     public static final String ERROR_VALIDATION_FAILED_MSG = "通知验签失败";
+
+    /**
+     * Native下单
+     */
+    public static final String NATIVE_ORDER = "Native下单";
+
+    /**
+     * UTF-8编码
+     */
+    public static final String UTF8 = "utf-8";
+
+    /**
+     * application/json内容类型
+     */
+    public static final String APP_JSON = "application/json";
+
+    /**
+     * Accept
+     */
+    public static final String ACCEPT = "Accept";
 }
