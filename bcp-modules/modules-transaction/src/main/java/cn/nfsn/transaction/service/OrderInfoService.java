@@ -27,4 +27,12 @@ public interface OrderInfoService extends IService<OrderInfo> {
      * @param codeUrl 二维码地址
      */
     void saveCodeUrl(String orderNo, String codeUrl);
+
+    /**
+     * 根据订单号获取订单状态
+     *
+     * @param orderNo 订单号，不能为空
+     * @return 返回该订单号对应的订单状态，如果订单不存在，则返回null
+     */
+    String getOrderStatus(String orderNo);
 }

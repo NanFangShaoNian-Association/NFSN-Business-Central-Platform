@@ -47,10 +47,13 @@ public enum ResultCode {
     CREATE_ORDER_CONTRAST_LOCK_FAIL(5502, "创建订单时校验锁失败", HttpStatus.BAD_REQUEST),
     INSERT_ORDER_FAIL(5503, "插入订单失败", HttpStatus.BAD_REQUEST),
     CREATE_ORDER_FAIL(5504, "创建订单失败，请重试", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_EXIST(5505, "订单不存在", HttpStatus.NOT_FOUND),
+    ORDER_PAYING(5506, "订单支付中", HttpStatus.BAD_REQUEST),
+    ORDER_PAID(5507, "订单已支付", HttpStatus.BAD_REQUEST),
 
     /*App相关错误：6001-6100*/
     APP_NOT_FOUND(6001, "App不存在", HttpStatus.NOT_FOUND),
-    APP_IS_DISABLE(6002, "App已经被禁用", HttpStatus.FORBIDDEN);
+    APP_IS_DISABLE(6002, "App已经被禁用", HttpStatus.FORBIDDEN),;
 
     /**
      * 状态码

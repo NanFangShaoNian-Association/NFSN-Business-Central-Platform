@@ -1,5 +1,6 @@
 package cn.nfsn.transaction.service.impl;
 
+import cn.nfsn.common.core.exception.OrderException;
 import cn.nfsn.common.core.exception.WxPayException;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.mapper.OrderInfoMapper;
@@ -187,5 +188,30 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             throw e;
         }
     }
+
+    /**
+     * 根据订单号获取订单状态
+     *
+     * @param orderNo 订单号，不能为空
+     * @return 返回该订单号对应的订单状态，如果订单不存在，则返回null
+     */
+    @Override
+    public String getOrderStatus(String orderNo) {
+        // 构建查询条件
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(ORDER_NO, orderNo);
+
+        // 使用查询条件进行数据库查询
+        OrderInfo orderInfo = baseMapper.selectOne(queryWrapper);
+
+        // 判断查询结果是否为空
+        if(orderInfo == null){
+            return null;
+        }
+
+        // 返回订单状态
+        return orderInfo.getOrderStatus();
+    }
+
 
 }

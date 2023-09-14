@@ -2,8 +2,10 @@ package cn.nfsn.transaction.controller;
 
 import cn.nfsn.common.core.domain.R;
 import cn.nfsn.transaction.bridge.PayBridge;
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
 import cn.nfsn.transaction.model.dto.ProductDTO;
+import cn.nfsn.transaction.service.OrderInfoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Map;
+
+import static cn.nfsn.common.core.enums.ResultCode.ORDER_PAID;
+import static cn.nfsn.common.core.enums.ResultCode.ORDER_PAYING;
 
 /**
  * @ClassName: WxPayController
@@ -27,6 +32,9 @@ public class WxPayController {
 
     @Resource
     private PayFactory payFactory;
+
+    @Resource
+    private OrderInfoService orderInfoService;
 
     /**
      * Native下单，调用统一下单API，生成支付二维码
@@ -54,5 +62,28 @@ public class WxPayController {
         //返回支付二维码连接和订单号
         return R.ok(result);
     }
+
+    /**
+     * 查询本地订单状态。根据传入的订单号，查询对应的订单状态，然后返回相应的结果。
+     *
+     * @param orderNo 订单编号
+     * @return 返回一个封装了查询结果的R对象，如果订单支付成功，则返回的R对象中的message为"支付成功"，否则为"支付中"
+     */
+    @ApiOperation("查询本地订单状态")
+    @GetMapping("/query-order-status/{orderNo}")
+    public R queryOrderStatus(@PathVariable String orderNo){
+
+        // 从orderInfoService服务中获取指定订单号的订单状态
+        String orderStatus = orderInfoService.getOrderStatus(orderNo);
+
+        // 判断获取到的订单状态是否为“成功”
+        if(OrderStatus.SUCCESS.getType().equals(orderStatus)){
+            return R.ok(ORDER_PAID);
+        }
+
+        // 如果订单状态不是“成功”，则返回一个R.ok()对象，其中的message为“支付中”
+        return R.ok(ORDER_PAYING);
+    }
+
 
 }
