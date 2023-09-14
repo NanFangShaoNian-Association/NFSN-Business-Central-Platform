@@ -42,10 +42,6 @@ public class WxPayController {
     @Resource
     private OrderInfoService orderInfoService;
 
-    //验证器
-    @Resource
-    private Verifier verifier;
-
     /**
      * Native下单，调用统一下单API，生成支付二维码
      *
