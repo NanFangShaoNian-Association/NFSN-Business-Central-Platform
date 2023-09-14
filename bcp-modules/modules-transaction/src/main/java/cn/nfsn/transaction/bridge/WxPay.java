@@ -3,6 +3,7 @@ package cn.nfsn.transaction.bridge;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import org.springframework.stereotype.Component;
 
+import java.security.GeneralSecurityException;
 import java.util.Map;
 
 /**
@@ -32,5 +33,16 @@ public class WxPay extends PayBridge {
    @Override
    public Map<String, Object> createOrder(ProductDTO productDTO) throws Exception {
       return payMode.createOrder(productDTO);
+   }
+
+   /**
+    * 处理订单
+    *
+    * @param bodyMap 请求体Map
+    * @throws GeneralSecurityException 抛出安全异常
+    */
+   @Override
+   public void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException {
+        payMode.processOrder(bodyMap);
    }
 }

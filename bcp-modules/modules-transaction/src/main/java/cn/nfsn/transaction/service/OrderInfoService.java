@@ -1,5 +1,6 @@
 package cn.nfsn.transaction.service;
 
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.entity.OrderInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -35,4 +36,20 @@ public interface OrderInfoService extends IService<OrderInfo> {
      * @return 返回该订单号对应的订单状态，如果订单不存在，则返回null
      */
     String getOrderStatus(String orderNo);
+
+    /**
+     * 根据订单编号更新订单状态
+     *
+     * @param orderNo     需要更新的订单的订单编号
+     * @param orderStatus 更新后的订单状态
+     */
+    void updateStatusByOrderNo(String orderNo, OrderStatus orderStatus);
+
+    /**
+     * 根据订单号获取订单
+     *
+     * @param orderNo 订单号
+     * @return 返回查询到的订单
+     */
+    OrderInfo getOrderByOrderNo(String orderNo);
 }

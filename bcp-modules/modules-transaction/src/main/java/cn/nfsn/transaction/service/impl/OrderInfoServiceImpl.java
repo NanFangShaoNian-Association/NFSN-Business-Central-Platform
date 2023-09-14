@@ -1,6 +1,5 @@
 package cn.nfsn.transaction.service.impl;
 
-import cn.nfsn.common.core.exception.OrderException;
 import cn.nfsn.common.core.exception.WxPayException;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.mapper.OrderInfoMapper;
@@ -213,5 +212,51 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         return orderInfo.getOrderStatus();
     }
 
+    /**
+     * 根据订单编号更新订单状态
+     *
+     * @param orderNo     需要更新的订单的订单编号
+     * @param orderStatus 更新后的订单状态
+     */
+    @Override
+    public void updateStatusByOrderNo(String orderNo, OrderStatus orderStatus) {
+        // 记录日志，输出更新后的订单状态
+        log.info("更新订单状态 ===> {}", orderStatus.getType());
+
+        // 创建查询条件
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+        // 添加查询条件：订单编号等于参数中的订单编号
+        queryWrapper.eq("order_no", orderNo);
+
+        // 创建新的订单信息对象，并设置新的订单状态
+        OrderInfo orderInfo = OrderInfo.builder()
+                .orderStatus(orderStatus.getType())
+                .build();
+
+        // 根据查询条件，更新订单状态
+        baseMapper.update(orderInfo, queryWrapper);
+    }
+
+    /**
+     * 根据订单号获取订单
+     *
+     * @param orderNo 订单号
+     * @return 返回查询到的订单
+     */
+    @Override
+    public OrderInfo getOrderByOrderNo(String orderNo) {
+
+        // 创建查询条件封装对象
+        QueryWrapper<OrderInfo> queryWrapper = new QueryWrapper<>();
+
+        // 添加查询条件，要求订单编号字段等于传入的订单编号
+        queryWrapper.eq(ORDER_NO, orderNo);
+
+        // 执行查询操作，查询结果最多有一条记录，因为订单编号是唯一的
+        OrderInfo orderInfo = baseMapper.selectOne(queryWrapper);
+
+        // 返回查询到的订单信息
+        return orderInfo;
+    }
 
 }

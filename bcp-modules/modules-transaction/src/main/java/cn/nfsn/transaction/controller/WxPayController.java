@@ -5,17 +5,23 @@ import cn.nfsn.transaction.bridge.PayBridge;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
 import cn.nfsn.transaction.model.dto.ProductDTO;
+import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
 import cn.nfsn.transaction.service.OrderInfoService;
+import com.google.gson.Gson;
+import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 import static cn.nfsn.common.core.enums.ResultCode.ORDER_PAID;
 import static cn.nfsn.common.core.enums.ResultCode.ORDER_PAYING;
+import static cn.nfsn.transaction.constant.WxPayConstant.*;
 
 /**
  * @ClassName: WxPayController
@@ -35,6 +41,10 @@ public class WxPayController {
 
     @Resource
     private OrderInfoService orderInfoService;
+
+    //验证器
+    @Resource
+    private Verifier verifier;
 
     /**
      * Native下单，调用统一下单API，生成支付二维码
@@ -85,5 +95,40 @@ public class WxPayController {
         return R.ok(ORDER_PAYING);
     }
 
+    /**
+     * 支付通知的 API 接口.
+     * 微信支付通过支付通知接口将用户支付成功消息通知给商户
+     *
+     * @param request HTTP 请求对象
+     * @param response HTTP 响应对象
+     * @return 返回响应消息的 JSON 字符串
+     */
+    @ApiOperation("支付通知")
+    @PostMapping("/native/notify")
+    public String nativeNotify(HttpServletRequest request, HttpServletResponse response) {
+        // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
+        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+
+        Gson gson = new Gson();
+        try {
+            // 调用拿到的实例进行处理
+            ResponseWxPayNotifyDTO result = wxPayNative.handlePaymentNotification(request);
+
+            // 根据返回结果设置响应状态，并返回相应消息
+            if (SUCCESS_CODE.equals(result.getCode())) {
+                response.setStatus(200);
+            } else {
+                response.setStatus(500);
+            }
+            return gson.toJson(result);
+
+        } catch (Exception e) {
+            // 如果处理过程中出现异常，打印异常堆栈，设置响应状态码为 500，并返回错误消息
+            e.printStackTrace();
+            response.setStatus(500);
+            return gson.toJson(new ResponseWxPayNotifyDTO(ERROR_CODE, ERROR_MSG));
+        }
+
+    }
 
 }
