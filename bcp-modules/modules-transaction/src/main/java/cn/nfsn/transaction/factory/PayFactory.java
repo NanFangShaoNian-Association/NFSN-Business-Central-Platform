@@ -1,8 +1,6 @@
 package cn.nfsn.transaction.factory;
 
-import cn.nfsn.transaction.bridge.PayBridge;
-import cn.nfsn.transaction.bridge.WxPay;
-import cn.nfsn.transaction.bridge.WxPayNative;
+import cn.nfsn.transaction.bridge.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +21,7 @@ public class PayFactory {
    /**
     * 支付宝APP支付类型常量
     */
-   public static final int ALI_PAY_APP = 1;
+   public static final int ALI_PAY_NATIVE = 1;
 
    /**
     * 微信APP支付类型常量
@@ -42,6 +40,9 @@ public class PayFactory {
     */
    public PayBridge createPay(int type) {
       switch (type) {
+         case ALI_PAY_NATIVE:
+            AliPayNative aliPayNative = applicationContext.getBean(AliPayNative.class);
+            return new AliPay(aliPayNative);
          case WX_PAY_NATIVE:
             WxPayNative wxPayNative = applicationContext.getBean(WxPayNative.class);
             return new WxPay(wxPayNative);
