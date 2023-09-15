@@ -44,6 +44,11 @@ public class WxPayConstant {
     public static final String NATIVE_ORDER = "Native下单";
 
     /**
+     * 关闭订单
+     */
+    public static final String CLOSE_ORDER = "关闭订单";
+
+    /**
      * UTF-8编码
      */
     public static final String UTF8 = "utf-8";

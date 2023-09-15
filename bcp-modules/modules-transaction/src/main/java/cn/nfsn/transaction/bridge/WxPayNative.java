@@ -200,7 +200,7 @@ public class WxPayNative implements IPayMode {
             // 获取响应内容和状态码
             // 响应体
             String bodyAsString = "";
-            if (entity != null) {
+            if (entity != null && !logInfo.equals(CLOSE_ORDER)) {
                 // 获取响应内容
                 bodyAsString = EntityUtils.toString(response.getEntity());
             }
@@ -391,7 +391,7 @@ public class WxPayNative implements IPayMode {
 
         try {
             // 使用sendRequest方法发送请求并获取结果
-            sendRequest(url, paramsMap, NATIVE_ORDER);
+            sendRequest(url, paramsMap, CLOSE_ORDER);
         } catch (IOException e) {
             throw new Exception("关闭订单失败，订单号：" + orderNo, e);
         }
