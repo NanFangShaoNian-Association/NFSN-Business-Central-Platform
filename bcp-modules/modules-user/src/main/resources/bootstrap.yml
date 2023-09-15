@@ -34,3 +34,21 @@ spring:
         # 命名空间
         namespace: 09b73c2d-c1c4-441f-96da-ca528338c42a
 
+sa-token:
+  sso:
+    # 打开模式三（使用Http请求校验ticket）
+    is-http: true
+    # SSO-Server端 ticket校验地址
+    check-ticket-url: http://localhost:9030/sso/checkTicket
+    # SSO-Server端 统一认证地址
+    auth-url: http://localhost:9030/sso/auth
+    get-data-url: http://localhost:9030/sso/getData     # sso-server 端拉取数据地址
+    slo-url: http://localhost:9030/sso/signout  # 单点注销地址
+    server-url: http://localhost:9030
+  sign:
+    # API 接口调用秘钥
+    secret-key: kQwIOrYvnXmSDkwEiFngrKidMcdrgKor
+
+forest:
+  # 关闭 forest 请求日志打印
+  log-enabled: false

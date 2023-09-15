@@ -22,6 +22,7 @@ public class MQProducerService {
     public Integer messageTimeOut;
 
     // 直接注入使用，用于发送消息到broker服务器
+
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
 
@@ -151,7 +152,6 @@ public class MQProducerService {
 
         // 生成一个随机UUID作为消息键
         msgRecord.setMsgKey(UUID.randomUUID().toString());
-
         return msgRecord;
     }
 

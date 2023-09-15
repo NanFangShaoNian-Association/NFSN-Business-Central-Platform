@@ -51,6 +51,7 @@
         WHERE msg_key = #{msgKey}
     </update>
     <select id="queryFailStateMsgRecord" resultType="cn.nfsn.common.core.domain.LocalMessageRecord">
-        select <include refid="Base_Column_List"/> from nfsn_business_central_platform.local_message_record where status = 1;
+        select <include refid="Base_Column_List"/> from nfsn_business_central_platform.local_message_record
+        where status = 1;
     </select>
 </mapper>

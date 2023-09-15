@@ -17,6 +17,7 @@ public enum ResultCode {
     PASSWORD_CONFIRM_ERROR(1005, "两次密码输入不匹配", HttpStatus.BAD_REQUEST),
 
     /*用户错误：2001-2999*/
+
     USER_NOT_LOGGED_IN(2001, "用户未登录，访问的路径需要验证，请登录", HttpStatus.UNAUTHORIZED),
     USER_LOGIN_ERROR(2002, "账号不存在或密码错误", HttpStatus.UNAUTHORIZED),
     USER_ACCOUNT_FORBIDDEN(2003, "账号已被禁用", HttpStatus.UNAUTHORIZED),
@@ -35,12 +36,15 @@ public enum ResultCode {
     ACCOUNT_LOGOUT(4003, "账号已注销,请重新注册", HttpStatus.FORBIDDEN),
     PHONE_NUM_REGISTERED(4004, "手机号已注销", HttpStatus.OK),
     REQUEST_ID_NULL(4005, "未能读取到有效 requestId", HttpStatus.BAD_REQUEST),
+
     //重试请求已被处理
     IDEMPOTENCY_ERROR(4006, "请求已处理", HttpStatus.OK),
 
     /*服务器内部错误：5001-5500*/
     INTERNAL_ERROR(5001, "服务器内部错误，请联系开发人员", HttpStatus.INTERNAL_SERVER_ERROR),
-    SERVER_BUSY(5002, "服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS),
+    AUTO_REGISTER_FILE(5002,"自动注册失败,请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR),
+    SERVER_BUSY(5003,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS),
+    MESSAGE_SERVICE_ERROR(5004,"短信服务异常，请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR),
 
     /*订单相关错误：5501-6000*/
     PRODUCT_OR_PAY_TYPE_NULL(5501, "产品和付款类型不能为空或空", HttpStatus.BAD_REQUEST),
@@ -53,7 +57,8 @@ public enum ResultCode {
 
     /*App相关错误：6001-6100*/
     APP_NOT_FOUND(6001, "App不存在", HttpStatus.NOT_FOUND),
-    APP_IS_DISABLE(6002, "App已经被禁用", HttpStatus.FORBIDDEN),;
+    APP_IS_DISABLE(6002, "App已经被禁用", HttpStatus.FORBIDDEN);
+
 
     /**
      * 状态码
