@@ -1,5 +1,6 @@
 package cn.nfsn.transaction.bridge;
 
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -43,8 +44,8 @@ public class WxPay extends PayBridge {
     * @throws GeneralSecurityException 抛出安全异常
     */
    @Override
-   public void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException {
-        payMode.processOrder(bodyMap);
+   public void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException {
+        payMode.processOrder(bodyMap, successStatus);
    }
 
    /**
@@ -56,5 +57,28 @@ public class WxPay extends PayBridge {
    @Override
    public void cancelOrder(String orderNo) throws Exception {
       payMode.cancelOrder(orderNo);
+   }
+
+   /**
+    * 根据订单号和退款原因进行退款操作
+    *
+    * @param orderNo 订单编号，不能为空
+    * @param reason  退款原因，不能为空
+    * @throws Exception 若退款过程中发生错误，则抛出异常
+    */
+   @Override
+   public void refund(String orderNo, String reason) throws Exception {
+      payMode.refund(orderNo, reason);
+   }
+
+   /**
+    * 处理退款单
+    *
+    * @param bodyMap 请求体Map，包含了微信通知的退款信息
+    * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
+    */
+   @Override
+   public void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception {
+        payMode.processRefund(bodyMap, successStatus);
    }
 }

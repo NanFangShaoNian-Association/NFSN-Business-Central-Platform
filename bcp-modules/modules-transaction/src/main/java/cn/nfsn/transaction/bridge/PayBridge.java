@@ -1,5 +1,6 @@
 package cn.nfsn.transaction.bridge;
 
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,7 @@ public abstract class PayBridge {
      * @throws GeneralSecurityException 抛出安全异常
      */
     @Transactional(rollbackFor = Exception.class)
-    public abstract void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException;
+    public abstract void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException;
 
     /**
      * 处理微信支付通知，验证请求的有效性，并进行订单处理.
@@ -49,8 +50,8 @@ public abstract class PayBridge {
      * @throws IOException              如果读取请求数据时出错
      * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
      */
-    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request) throws IOException, GeneralSecurityException {
-        return payMode.handlePaymentNotification(request);
+    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+        return payMode.handlePaymentNotification(request, successStatus);
     }
 
     /**
@@ -60,4 +61,22 @@ public abstract class PayBridge {
      * @throws Exception 抛出异常
      */
     public abstract void cancelOrder(String orderNo) throws Exception;
+
+    /**
+     * 根据订单号和退款原因进行退款操作
+     *
+     * @param orderNo 订单编号，不能为空
+     * @param reason  退款原因，不能为空
+     * @throws Exception 若退款过程中发生错误，则抛出异常
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public abstract void refund(String orderNo, String reason) throws Exception;
+
+    /**
+     * 处理退款单
+     *
+     * @param bodyMap 请求体Map，包含了微信通知的退款信息
+     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
+     */
+    public abstract void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception;
 }

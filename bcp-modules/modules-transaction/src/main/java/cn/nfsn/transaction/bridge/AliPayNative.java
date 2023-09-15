@@ -2,6 +2,7 @@ package cn.nfsn.transaction.bridge;
 
 import cn.hutool.json.JSONObject;
 import cn.nfsn.transaction.config.AlipayClientConfig;
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.enums.PayType;
 import cn.nfsn.transaction.model.dto.AlipayBizContentDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
@@ -104,7 +105,7 @@ public class AliPayNative implements IPayMode {
      * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
      */
     @Override
-    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request) throws IOException, GeneralSecurityException {
+    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
         return null;
     }
 
@@ -115,7 +116,7 @@ public class AliPayNative implements IPayMode {
      * @throws GeneralSecurityException 抛出安全异常
      */
     @Override
-    public void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException {
+    public void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException {
 
     }
 
@@ -127,6 +128,29 @@ public class AliPayNative implements IPayMode {
      */
     @Override
     public void cancelOrder(String orderNo) throws Exception {
+
+    }
+
+    /**
+     * 根据订单号和退款原因进行退款操作
+     *
+     * @param orderNo 订单编号，不能为空
+     * @param reason  退款原因，不能为空
+     * @throws Exception 若退款过程中发生错误，则抛出异常
+     */
+    @Override
+    public void refund(String orderNo, String reason) throws Exception {
+
+    }
+
+    /**
+     * 处理退款单
+     *
+     * @param bodyMap 请求体Map，包含了微信通知的退款信息
+     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
+     */
+    @Override
+    public void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception {
 
     }
 }

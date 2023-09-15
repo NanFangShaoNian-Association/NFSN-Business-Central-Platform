@@ -112,7 +112,7 @@ public class WxPayController {
         Gson gson = new Gson();
         try {
             // 调用拿到的实例进行处理
-            ResponseWxPayNotifyDTO result = wxPayNative.handlePaymentNotification(request);
+            ResponseWxPayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.SUCCESS);
 
             // 根据返回结果设置响应状态，并返回相应消息
             if (SUCCESS_CODE.equals(result.getCode())) {
@@ -153,6 +153,67 @@ public class WxPayController {
 
         // 返回成功响应，附带消息为"订单已取消"
         return R.ok("订单已取消");
+    }
+
+    /**
+     * 申请退款操作
+     *
+     * @param orderNo 订单编号
+     * @param reason 退款原因
+     * @return R 返回类型为通用返回对象R，包含了处理的结果信息
+     * @throws Exception 抛出异常
+     */
+    @ApiOperation("申请退款")
+    @PostMapping("/refunds/{orderNo}/{reason}")
+    public R refunds(@PathVariable String orderNo, @PathVariable String reason) throws Exception {
+        // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
+        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+
+        // 记录日志信息，表示开始进行退款操作
+        log.info("申请退款");
+
+        // 调用微信支付服务，进行退款操作，参数为订单编号和退款原因
+        wxPayNative.refund(orderNo, reason);
+
+        // 返回成功的通用返回对象
+        return R.ok();
+    }
+
+    /**
+     * 退款结果通知接口
+     *
+     * 当退款状态发生改变后，微信会把相关退款结果发送给商户。商户需要实现此接口以获取这些通知。
+     */
+    @ApiOperation("退款结果通知")
+    @PostMapping("/refunds/notify")
+    public String refundsNotify(HttpServletRequest request, HttpServletResponse response) {
+        // 记录日志：开始执行退款通知处理
+        log.info("退款通知执行");
+
+        // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
+        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+
+        try {
+            // 调用拿到的实例进行处理
+            ResponseWxPayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.REFUND_SUCCESS);
+
+            // 判断返回结果
+            if (result.getCode().equals(SUCCESS_CODE)) {
+                // 成功处理后返回成功信息
+                response.setStatus(200);
+            } else {
+                // 验签失败，记录日志并返回错误信息
+                response.setStatus(500);
+            }
+
+            return new Gson().toJson(result);
+
+        } catch (Exception e) {
+            // 出现异常时打印错误堆栈，并返回错误信息
+            e.printStackTrace();
+            response.setStatus(500);
+            return new Gson().toJson(new ResponseWxPayNotifyDTO("ERROR", "失败"));
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package cn.nfsn.transaction.bridge;
 
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,7 @@ public interface IPayMode {
     * @throws IOException               如果读取请求数据时出错
     * @throws GeneralSecurityException  如果在验证签名过程中出现安全异常
     */
-   ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request) throws IOException, GeneralSecurityException;
+   ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException;
 
    /**
     * 处理订单
@@ -42,7 +43,7 @@ public interface IPayMode {
     * @throws GeneralSecurityException 抛出安全异常
     */
    @Transactional(rollbackFor = Exception.class)
-   void processOrder(Map<String, Object> bodyMap) throws GeneralSecurityException;
+   void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException;
 
    /**
     * 取消订单
@@ -51,4 +52,24 @@ public interface IPayMode {
     * @throws Exception 抛出异常
     */
     void cancelOrder(String orderNo) throws Exception;
+
+    /**
+     * 根据订单号和退款原因进行退款操作
+     *
+     * @param orderNo 订单编号，不能为空
+     * @param reason  退款原因，不能为空
+     * @throws Exception 若退款过程中发生错误，则抛出异常
+     */
+    @Transactional(rollbackFor = Exception.class)
+    void refund(String orderNo, String reason) throws Exception;
+
+    /**
+     * 处理退款单
+     *
+     * @param bodyMap 请求体Map，包含了微信通知的退款信息
+     * @successStatus 成功状态
+     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
+     */
+    @Transactional(rollbackFor = Exception.class)
+    void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception;
 }
