@@ -13,6 +13,7 @@
         <module>bcp-gateway</module>
         <module>bcp-api</module>
         <module>bcp-modules</module>
+        <module>bcp-auth</module>
     </modules>
 
     <properties>
@@ -22,7 +23,7 @@
         <java.version>1.8</java.version>
         <swagger.fox.version>3.0.0</swagger.fox.version>
         <swagger.core.version>1.6.2</swagger.core.version>
-        <fastjson.version>2.0.34</fastjson.version>
+        <fastjson.version>2.0.14</fastjson.version>
         <mybatis-plus.version>3.5.0</mybatis-plus.version>
         <druid.version>1.1.22</druid.version>
         <mysql.version>8.0.33</mysql.version>
@@ -32,6 +33,11 @@
         <spring-boot-dependencies.version>2.6.13</spring-boot-dependencies.version>
         <redisson.version>3.9.1</redisson.version>
         <BCP.version>0.0.1</BCP.version>
+        <hutool.version>5.7.17</hutool.version>
+        <forest-spring-boot-starter.version>1.5.26</forest-spring-boot-starter.version>
+        <sa-token-sso.version>1.35.0.RC</sa-token-sso.version>
+        <alibabacloud-sms.version>2.0.23</alibabacloud-sms.version>
+        <knife4j-spring-ui.version>3.0.3</knife4j-spring-ui.version>
     </properties>
 
     <dependencyManagement>
@@ -66,6 +72,12 @@
                 <version>${swagger.fox.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-spring-ui</artifactId>
+                <version>${knife4j-spring-ui.version}</version>
+            </dependency>
+
             <!-- 阿里JSON解析器 -->
             <dependency>
                 <groupId>com.alibaba.fastjson2</groupId>
@@ -93,11 +105,50 @@
                 <version>${redisson.version}</version>
             </dependency>
 
+            <!-- Http请求工具（在模式三的单点注销功能下用到，如不需要可以注释掉） -->
+            <dependency>
+                <groupId>com.dtflys.forest</groupId>
+                <artifactId>forest-spring-boot-starter</artifactId>
+                <version>${forest-spring-boot-starter.version}</version>
+            </dependency>
+
+            <!-- Sa-Token 插件：整合SSO -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-sso</artifactId>
+                <version>${sa-token-sso.version}</version>
+            </dependency>
+
             <!-- mybatis-plus -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <!--hutool-->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-mail</artifactId>
+                <version>${spring-boot-dependencies.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>alibabacloud-dysmsapi20170525</artifactId>
+                <version>${alibabacloud-sms.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
             </dependency>
 
             <dependency>

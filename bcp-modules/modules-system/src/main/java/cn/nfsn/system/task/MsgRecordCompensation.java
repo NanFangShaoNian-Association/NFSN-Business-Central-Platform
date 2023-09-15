@@ -1,6 +1,7 @@
 package cn.nfsn.system.task;
 
 import cn.nfsn.common.core.domain.LocalMessageRecord;
+import cn.nfsn.common.core.domain.MqMessage;
 import cn.nfsn.common.rocketmq.enums.EnumMessageStatus;
 import cn.nfsn.common.rocketmq.service.MQProducerService;
 import cn.nfsn.system.mapper.LocalMessageRecordMapper;
@@ -38,7 +39,7 @@ public class MsgRecordCompensation {
         for (LocalMessageRecord message : retryMessageRecords) {
             if (message.getCurrentRetryTimes() < message.getMaxRetryTimes()) {
                 // 重新发送消息
-                rocketMQTemplate.asyncSend(message.getTopic() + ":"+message.getTags(), MessageBuilder.withPayload(message.getBody()).build(), new SendCallback() {
+                rocketMQTemplate.asyncSend(message.getTopic() + ":"+message.getTags(), MessageBuilder.withPayload(new MqMessage(message.getMsgKey(), message.getBody())).build(), new SendCallback() {
                     @Override
                     public void onSuccess(SendResult sendResult) {
                         localMessageRecordService.updateMsgRecordByMsgKey(mqProducerService.asyncMsgRecordOnSuccessHandler(message,sendResult));
@@ -46,7 +47,6 @@ public class MsgRecordCompensation {
                     @Override
                     public void onException(Throwable throwable) {
                         //log.error
-                        System.out.println(throwable.getMessage());
                         localMessageRecordService.updateMsgRecordByMsgKey(mqProducerService.asyncMsgRecordOnFailHandler(message));
                     }
                 });

@@ -4,40 +4,41 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.nfsn.user.mapper.UserInfoMapper">
 
-    <resultMap id="BaseResultMap" type="cn.nfsn.common.core.domain.UserInfo">
-            <id property="userId" column="user_id" jdbcType="INTEGER"/>
-            <result property="userName" column="user_name" jdbcType="VARCHAR"/>
-            <result property="userRole" column="user_role" jdbcType="TINYINT"/>
-            <result property="userAvatar" column="user_avatar" jdbcType="VARCHAR"/>
-            <result property="email" column="email" jdbcType="VARCHAR"/>
-            <result property="phoneNumber" column="phone_number" jdbcType="CHAR"/>
-            <result property="userIntroduction" column="user_introduction" jdbcType="VARCHAR"/>
-            <result property="userLocationProvince" column="user_location_province" jdbcType="VARCHAR"/>
-            <result property="userLocationCity" column="user_location_city" jdbcType="VARCHAR"/>
-            <result property="userLocationRegion" column="user_location_region" jdbcType="VARCHAR"/>
-            <result property="longitude" column="longitude" jdbcType="DOUBLE"/>
-            <result property="latitude" column="latitude" jdbcType="DOUBLE"/>
-            <result property="wxOpenid" column="wx_openID" jdbcType="VARCHAR"/>
-            <result property="qqOpenid" column="qq_openID" jdbcType="VARCHAR"/>
-            <result property="loginLastTime" column="login_last_time" jdbcType="TIMESTAMP"/>
-            <result property="offLineLastTime" column="off_line_last_time" jdbcType="TIMESTAMP"/>
-            <result property="loginLastTimeIp" column="login_last_time_ip" jdbcType="VARCHAR"/>
-            <result property="wxUnionid" column="wx_unionid" jdbcType="VARCHAR"/>
-            <result property="qqUnionid" column="QQ_unionid" jdbcType="VARCHAR"/>
-            <result property="userRegistTime" column="user_regist_time" jdbcType="TIMESTAMP"/>
-            <result property="userStatus" column="user_status" jdbcType="TINYINT"/>
-            <result property="updateTime" column="update_time" jdbcType="DATE"/>
-            <result property="logoutStatus" column="logout_status" jdbcType="TINYINT"/>
+    <resultMap id="UserResultMap" type="cn.nfsn.common.core.domain.UserInfo">
+        <id property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="userRole" column="user_role" jdbcType="TINYINT"/>
+        <result property="userAvatar" column="user_avatar" jdbcType="VARCHAR"/>
+        <result property="userIntroduction" column="user_introduction" jdbcType="VARCHAR"/>
+        <result property="userLocationProvince" column="user_location_province" jdbcType="VARCHAR"/>
+        <result property="userLocationCity" column="user_location_city" jdbcType="VARCHAR"/>
+        <result property="userLocationRegion" column="user_location_region" jdbcType="VARCHAR"/>
+        <result property="longitude" column="longitude" jdbcType="DOUBLE"/>
+        <result property="latitude" column="latitude" jdbcType="DOUBLE"/>
+        <result property="wxOpenid" column="wx_openID" jdbcType="VARCHAR"/>
+        <result property="qqOpenid" column="qq_openID" jdbcType="VARCHAR"/>
+        <result property="loginLastTime" column="login_last_time" jdbcType="TIMESTAMP"/>
+        <result property="offLineLastTime" column="off_line_last_time" jdbcType="TIMESTAMP"/>
+        <result property="loginLastTimeIp" column="login_last_time_ip" jdbcType="VARCHAR"/>
+        <result property="wxUnionid" column="wx_unionid" jdbcType="VARCHAR"/>
+        <result property="qqUnionid" column="QQ_unionid" jdbcType="VARCHAR"/>
+        <result property="userRegistTime" column="user_regist_time" jdbcType="TIMESTAMP"/>
+        <result property="userStatus" column="user_status" jdbcType="TINYINT"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="logoutStatus" column="logout_status" jdbcType="TINYINT"/>
+        <result property="appCode" column="app_code" jdbcType="CHAR"/>
+        <result property="credentialsId" column="credentials_id" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         user_id,user_name,user_role,
-        user_avatar,email,phone_number,
-        user_introduction,user_location_province,user_location_city,
-        user_location_region,longitude,latitude,
-        wx_openID,qq_openID,login_last_time,
-        off_line_last_time,login_last_time_ip,wx_unionid,
-        QQ_unionid,user_regist_time,user_status,update_time,logout_status
+        user_avatar,user_introduction,user_location_province,
+        user_location_city,user_location_region,longitude,
+        latitude,wx_openID,qq_openID,
+        login_last_time,off_line_last_time,login_last_time_ip,
+        wx_unionid,QQ_unionid,user_regist_time,
+        user_status,update_time,logout_status,
+        app_code,credentials_id
     </sql>
 
     <update id="recoverDefaultInfo">
@@ -45,7 +46,6 @@
         SET user_name = '默认用户名',
             user_role = 0,
             user_avatar = 'null',
-            email = NULL,
             user_introduction = NULL,
             user_location_province = NULL,
             user_location_city = NULL,
@@ -62,7 +62,32 @@
             user_regist_time = NOW(),
             user_status = 0,
             update_time = NULL,
-            logout_status = 0
+            logout_status = 0,
+            app_code = 0
         WHERE user_id = #{userId};
     </update>
+
+    <select id="queryUserInfoByEmail" resultMap="UserResultMap">
+        select         user_id,user_name,user_role,
+                       user_avatar,user_introduction,user_location_province,
+                       user_location_city,user_location_region,longitude,
+                       latitude,wx_openID,qq_openID,
+                       login_last_time,off_line_last_time,login_last_time_ip,
+                       wx_unionid,QQ_unionid,user_regist_time,
+                       user_status,update_time,logout_status,
+                       app_code,ui.credentials_id from nfsn_business_central_platform.auth_credentials ac left join nfsn_business_central_platform.user_info ui
+        on ac.credentials_id = ui.credentials_id where app_code = #{param2} and user_status = 0 and email = #{param1};
+    </select>
+
+    <select id="queryUserInfoByPhone" resultMap="UserResultMap">
+        select         user_id,user_name,user_role,
+                       user_avatar,user_introduction,user_location_province,
+                       user_location_city,user_location_region,longitude,
+                       latitude,wx_openID,qq_openID,
+                       login_last_time,off_line_last_time,login_last_time_ip,
+                       wx_unionid,QQ_unionid,user_regist_time,
+                       user_status,update_time,logout_status,
+                       app_code,ui.credentials_id from nfsn_business_central_platform.auth_credentials ac left join nfsn_business_central_platform.user_info ui
+        on ac.credentials_id = ui.credentials_id where app_code = #{param2} and user_status = 0 and phone_Number = #{param1};
+    </select>
 </mapper>

@@ -11,6 +11,10 @@ import cn.nfsn.common.core.domain.UserInfo;
 */
 public interface UserInfoMapper extends BaseMapper<UserInfo> {
     public void recoverDefaultInfo(Integer userId);
+
+    UserInfo queryUserInfoByEmail(String email,String appCode);
+
+    UserInfo queryUserInfoByPhone(String phone,String appCode);
 }
 
 

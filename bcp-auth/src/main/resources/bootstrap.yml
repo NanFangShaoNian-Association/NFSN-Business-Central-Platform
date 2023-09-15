@@ -1,0 +1,31 @@
+server:
+  port: 9030
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: bcp-auth
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  cloud:
+    nacos:
+      server-addr: 39.108.67.16:8848
+      discovery:
+        namespace: 09b73c2d-c1c4-441f-96da-ca528338c42a
+      config:
+        # 配置中心地址
+        server-addr: 39.108.67.16:8848
+        # 配置文件格式
+        file-extension: yml
+        extension-configs:
+          - dataId: bcp-auth-application-dev.yml
+            group: DEFAULT_GROUP
+        # 共享配置
+        shared-configs:
+          - dataId: bcp-share-application-dev.yml
+            group: DEFAULT_GROUP
+        # 命名空间
+        namespace: 09b73c2d-c1c4-441f-96da-ca528338c42a

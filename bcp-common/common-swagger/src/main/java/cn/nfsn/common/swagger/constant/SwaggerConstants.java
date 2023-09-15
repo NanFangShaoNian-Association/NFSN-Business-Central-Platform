@@ -1,4 +1,4 @@
-package cn.nfsn.common.core.constant;
+package cn.nfsn.common.swagger.constant;
 
 import java.util.Arrays;
 import java.util.List;
