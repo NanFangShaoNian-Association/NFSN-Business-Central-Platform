@@ -16,6 +16,7 @@
         <module>api-article</module>
         <module>api-chat</module>
         <module>api-system</module>
+        <module>api-transaction</module>
     </modules>
 
     <dependencies>

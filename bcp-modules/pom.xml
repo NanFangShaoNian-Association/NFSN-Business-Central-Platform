@@ -13,6 +13,7 @@
         <module>modules-chat</module>
         <module>modules-article</module>
         <module>modules-system</module>
+        <module>modules-transaction</module>
     </modules>
 
     <packaging>pom</packaging>
