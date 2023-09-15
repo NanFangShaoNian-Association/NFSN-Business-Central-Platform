@@ -59,9 +59,9 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
+
     @Autowired
     private ResourceLoader resourceLoader;
-
 
     @Override
     public UserInfo queryUserInfo(String userId) {
