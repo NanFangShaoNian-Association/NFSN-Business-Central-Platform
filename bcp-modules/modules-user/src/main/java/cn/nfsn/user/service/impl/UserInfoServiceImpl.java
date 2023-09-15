@@ -9,10 +9,10 @@ import cn.nfsn.common.core.domain.UserInfo;
 import cn.nfsn.common.core.enums.ResultCode;
 import cn.nfsn.common.core.exception.SystemServiceException;
 import cn.nfsn.common.core.exception.UserOperateException;
+import cn.nfsn.common.core.utils.Base64FileReader;
 import cn.nfsn.common.core.utils.Base64ToMultipartFileUtils;
 import cn.nfsn.common.core.utils.DateUtils;
 import cn.nfsn.common.core.utils.RandomNameUtils;
-import cn.nfsn.common.core.utils.StringUtils;
 import cn.nfsn.common.minio.service.MinioSysFileService;
 import cn.nfsn.common.rocketmq.constant.RocketMQConstants;
 import cn.nfsn.common.rocketmq.service.MQProducerService;
@@ -25,12 +25,15 @@ import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -56,6 +59,9 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
+    @Autowired
+    private ResourceLoader resourceLoader;
+
 
     @Override
     public UserInfo queryUserInfo(String userId) {
@@ -63,7 +69,6 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
         checkUserStatus(userInfo.getUserStatus().toString());
         return userInfo;
     }
-
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void logout(String userId) {
@@ -89,15 +94,9 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
                         //log.error
                         remoteMsgRecordService.updateMsgRecord(mqProducerService.asyncMsgRecordOnFailHandler(messageRecord));
                     }
-                },mqProducerService.messageTimeOut,5);
+                },mqProducerService.messageTimeOut,18);
             }
         });
-    }
-
-    @Override
-    public UserInfo checkPhoneNumbExit(String phoneNumber) {
-        LambdaQueryWrapper<UserInfo> queryWrapper = new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getPhoneNumber, phoneNumber);
-        return this.getOne(queryWrapper);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -110,10 +109,12 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void registration(UserInfo userInfo) {
+    public void registration(UserInfo userInfo) throws IOException {
         Integer userId = checkSignupFromLogout(userInfo);
         userInfo.setUserName(setRandomName(userInfo.getUserName()));
-        userInfo.setUserAvatar(setAvatarToRegistration(userInfo.getUserAvatar()));
+        userInfo.setUserRegistTime(DateUtils.getNowDate());
+        Resource resource = resourceLoader.getResource(UserConstants.DEFAULT_HEAD_PICTURE);
+        userInfo.setUserAvatar(setAvatarToRegistration(Base64FileReader.readBase64FromFile(resource.getFile().getPath())));
         if (Objects.isNull(userId)) {
             this.save(userInfo);
         } else {
@@ -122,9 +123,18 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
         }
     }
 
+    @Override
+    public UserInfo queryUserInfoByEmail(String email,String appCode) {
+        return userInfoMapper.queryUserInfoByEmail(email,appCode);
+    }
+
+    @Override
+    public UserInfo queryUserInfoByPhone(String phone,String appCode) {
+        return userInfoMapper.queryUserInfoByPhone(phone,appCode);
+    }
 
     private String setRandomName(String name) {
-        if (!StringUtils.hasText(name)) {
+        if (name!=null) {
             return name;
         }
         return RandomNameUtils.getRandomChineseCharacters();
@@ -165,19 +175,22 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo>
     }
 
     /**
-     * 校验注册账号是否是注销的账号
+     * 校验注册账号是否为注销的账号
      */
-    private Integer checkSignupFromLogout(UserInfo userInfo) {
-        UserInfo exitUserInfo = checkPhoneNumbExit(userInfo.getPhoneNumber());
-        if (Objects.isNull(exitUserInfo)) {
-            return null;
+    private Integer checkSignupFromLogout(UserInfo userInfoDTO) {
+        UserInfo userInfo = this.getOne(new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getCredentialsId, userInfoDTO.getCredentialsId()));
+        if (!Objects.isNull(userInfo)&&!userInfo.getUserStatus().toString().equals(UserConstants.LOGOUT)) {
+            //账号已注销将信息恢复默认让用户重新重新登陆
+            userInfoMapper.recoverDefaultInfo(userInfoDTO.getUserId());
+            throw new UserOperateException(ResultCode.ACCOUNT_LOGOUT);
         }
-        if (!exitUserInfo.getUserStatus().toString().equals(UserConstants.LOGOUT)) {
-            throw new UserOperateException(ResultCode.PHONE_NUM_REGISTERED);
-        }
-        //将已注销的用户信息恢复默认
-        userInfoMapper.recoverDefaultInfo(userInfo.getUserId());
-        return userInfo.getUserId();
+        return userInfoDTO.getUserId();
+    }
+
+    @Override
+    public UserInfo queryUserInfoByCredentialsId(String credentialsId, String appCode) {
+        LambdaQueryWrapper<UserInfo> queryWrapper = new LambdaQueryWrapper<UserInfo>().eq(UserInfo::getCredentialsId, credentialsId).eq(UserInfo::getAppCode, appCode);
+        return this.getOne(queryWrapper);
     }
 }
 

@@ -1,7 +1,9 @@
 package cn.nfsn.user.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nfsn.common.core.domain.UserInfo;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.io.IOException;
 
 /**
 * @author gaojianjie
@@ -13,10 +15,14 @@ public interface UserInfoService extends IService<UserInfo> {
 
     void logout(String userId);
 
-    void registration(UserInfo userInfo);
+    void registration(UserInfo userInfo) throws IOException;
 
     void updateUserInfo(UserInfo userInfo);
 
-    UserInfo checkPhoneNumbExit(String phoneNumber);
+    UserInfo queryUserInfoByEmail(String email,String appCode);
+
+    UserInfo queryUserInfoByPhone(String phone,String appCode);
+
+    UserInfo queryUserInfoByCredentialsId(String credentialsId, String appCode);
 }
 

@@ -20,7 +20,7 @@ public enum ResultCode {
     USER_LOGIN_ERROR(2002,"账号不存在或密码错误", HttpStatus.UNAUTHORIZED),
     USER_ACCOUNT_FORBIDDEN(2003,"账号已被禁用", HttpStatus.UNAUTHORIZED),
     USER_HAS_EXISTED(2005,"用户已存在", HttpStatus.CONFLICT),
-    USER_VERIFY_ERROR(2008,"验证码校验失败，请重新获取", HttpStatus.UNAUTHORIZED),
+    USER_VERIFY_ERROR(2008,"验证码校验失败", HttpStatus.UNAUTHORIZED),
     USER_INSERT_ERROR(2010,"用户数据插入异常",HttpStatus.CONFLICT),
     USER_NOT_EXIST_BY_CODE(2012,"账号不存在,请注册", HttpStatus.NOT_FOUND),
     USER_REGISTRATION_TIME_OUT(2014,"用户注册超时，请重新注册",HttpStatus.UNPROCESSABLE_ENTITY),
@@ -32,14 +32,17 @@ public enum ResultCode {
     SMS_INTERRUPTED_OR_EXECUTION_ERROR(4001,"阿里云服务被中断或执行错误",HttpStatus.BAD_REQUEST),
     ACCOUNT_FREEZE(4002,"账号暂时冻结",HttpStatus.FORBIDDEN),
     ACCOUNT_LOGOUT(4003,"账号已注销,请重新注册",HttpStatus.FORBIDDEN),
-    PHONE_NUM_REGISTERED(4004,"手机号已注销",HttpStatus.OK),
+    PHONE_NUM_REGISTERED(4004,"手机号已注册",HttpStatus.OK),
     REQUEST_ID_NULL(4005,"未能读取到有效 requestId", HttpStatus.BAD_REQUEST),
     //重试请求已被处理
     IDEMPOTENCY_ERROR(4006,"请求已处理", HttpStatus.OK),
 
     /*服务器内部错误*/
     INTERNAL_ERROR(5001,"服务器内部错误，请联系开发人员", HttpStatus.INTERNAL_SERVER_ERROR),
-    SERVER_BUSY(5001,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS);
+    AUTO_REGISTER_FILE(5002,"自动注册失败,请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR),
+    SERVER_BUSY(5003,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS),
+    MESSAGE_SERVICE_ERROR(5004,"短信服务异常，请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR);
+
 
     /**
      * 状态码

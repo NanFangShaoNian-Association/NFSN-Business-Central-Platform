@@ -40,7 +40,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = SystemServiceException.class)
     @ResponseBody
     public R serviceExceptionHandler(SystemServiceException e){
-        log.error("抛出业务错误!：{}",e.getMessage());
+//        log.error("抛出业务错误!：{}",e.getMessage());
+        e.printStackTrace();
         return R.fail(e.getResultCode());
     }
 
@@ -52,7 +53,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = UserOperateException.class)
     @ResponseBody
     public R userOperateExceptionHandler(UserOperateException e){
-        log.error("用户操作错误!：{}",e.getMessage());
+//        log.error("用户操作错误!：{}",e.getMessage());
+        e.printStackTrace();
         return R.fail(e.getResultCode());
     }
 
@@ -118,7 +120,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value =NullPointerException.class)
     @ResponseBody
     public R exceptionHandler(NullPointerException e){
-        log.error("抛出空指针错误!:{}",e.getMessage());
+//        log.error("抛出空指针错误!:{}",e.getMessage());
+        e.printStackTrace();
         return R.fail(ResultCode.INTERNAL_ERROR);
     }
 
@@ -177,7 +180,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value =Exception.class)
     @ResponseBody
     public R exceptionHandler(Exception e){
-        log.error("抛出服务器内部错误!:{}", e.getMessage());
+        //log
+        e.printStackTrace();
         return R.fail(ResultCode.INTERNAL_ERROR);
     }
 }

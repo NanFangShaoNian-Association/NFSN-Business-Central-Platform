@@ -15,7 +15,6 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <knife4j-spring-ui.version>3.0.3</knife4j-spring-ui.version>
     </properties>
 
     <dependencies>
@@ -23,15 +22,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <dependency>
-            <groupId>cn.nfsn</groupId>
-            <artifactId>common-swagger</artifactId>
-        </dependency>
         <!--swagger UI-->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-spring-ui</artifactId>
-            <version>${knife4j-spring-ui.version}</version>
         </dependency>
         <dependency>
             <groupId>cn.nfsn</groupId>
@@ -80,8 +74,26 @@
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
-    </dependencies>
 
+<!--        test===================================================   -->
+        <!-- Http请求工具 -->
+        <dependency>
+            <groupId>com.dtflys.forest</groupId>
+            <artifactId>forest-spring-boot-starter</artifactId>
+            <version>1.5.26</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-sso</artifactId>
+            <version>1.35.0.RC</version>
+            <scope>compile</scope>
+        </dependency>
+<!--===================================================-->
+        <dependency>
+            <groupId>cn.nfsn</groupId>
+            <artifactId>api-user</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
 
