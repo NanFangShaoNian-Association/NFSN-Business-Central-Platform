@@ -74,7 +74,7 @@ public class AliPay extends PayBridge {
    /**
     * 处理退款单
     *
-    * @param bodyMap 请求体Map，包含了微信通知的退款信息
+    * @param bodyMap 请求体Map，包含了支付宝通知的退款信息
     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
     */
     @Override

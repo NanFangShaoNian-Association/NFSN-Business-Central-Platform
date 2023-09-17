@@ -43,7 +43,7 @@ public abstract class PayBridge {
     public abstract void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException;
 
     /**
-     * 处理微信支付通知，验证请求的有效性，并进行订单处理.
+     * 处理支付通知，验证请求的有效性，并进行订单处理.
      *
      * @param request HttpServletRequest 对象，表示一个 HTTP 请求
      * @return ResponseWxPayNotifyDTO 响应对象，包含响应码和信息
@@ -75,7 +75,7 @@ public abstract class PayBridge {
     /**
      * 处理退款单
      *
-     * @param bodyMap 请求体Map，包含了微信通知的退款信息
+     * @param bodyMap 请求体Map，包含了退款信息
      * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
      */
     public abstract void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception;
