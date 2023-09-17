@@ -1,5 +1,6 @@
 package cn.nfsn.transaction.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +23,13 @@ public class AlipayBizContentDTO {
     /**
      * 商户网站唯一订单号
      */
+    @JsonProperty("out_trade_no")
     private String outTradeNo;
 
     /**
      * 订单总金额，单位为元，精确到小数点后两位
      */
+    @JsonProperty("total_amount")
     private BigDecimal totalAmount;
 
     /**
@@ -37,5 +40,6 @@ public class AlipayBizContentDTO {
     /**
      * 销售产品码，支付宝平台上架的销售产品对应的编码
      */
+    @JsonProperty("product_code")
     private String productCode;
 }
