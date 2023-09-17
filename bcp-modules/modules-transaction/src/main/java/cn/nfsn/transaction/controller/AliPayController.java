@@ -2,6 +2,7 @@ package cn.nfsn.transaction.controller;
 
 import cn.nfsn.common.core.domain.R;
 import cn.nfsn.transaction.bridge.PayBridge;
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import io.swagger.annotations.Api;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @ClassName: AliPayController
@@ -57,4 +59,28 @@ public class AliPayController {
             throw new RuntimeException("Unexpected result type: " + result.getClass().getName());
         }
     }
+
+    /**
+     * 支付通知处理接口，用于处理支付宝的异步通知
+     *
+     * @param request 请求参数，包含支付宝异步通知中的全部信息
+     * @return 处理结果，成功返回"success"，失败返回"failure"
+     */
+    @ApiOperation("支付通知")
+    @PostMapping("/trade/notify")
+    public String tradeNotify(@RequestParam HttpServletRequest request){
+        // 使用工厂方法创建具体的支付方式实例
+        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+
+        log.info("支付通知正在执行");
+
+        try {
+            aliPayNative.handlePaymentNotification(request, OrderStatus.NOTPAY);
+            return "success";
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return "failure";
+        }
+    }
+
 }
