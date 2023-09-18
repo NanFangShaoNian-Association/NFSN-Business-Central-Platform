@@ -83,4 +83,38 @@ public class AliPayController {
         }
     }
 
+    /**
+     * 用户取消订单
+     * @param orderNo
+     * @return
+     */
+    @ApiOperation("用户取消订单")
+    @PostMapping("/trade/close/{orderNo}")
+    public R cancel(@PathVariable String orderNo) throws Exception {
+        // 使用工厂方法创建具体的支付方式实例
+        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+
+        log.info("取消订单");
+        aliPayNative.cancelOrder(orderNo);
+        return R.ok();
+    }
+
+    /**
+     * 申请退款
+     *
+     * @param orderNo
+     * @param reason
+     * @return
+     */
+    @ApiOperation("申请退款")
+    @PostMapping("/trade/refund/{orderNo}/{reason}")
+    public R refunds(@PathVariable String orderNo, @PathVariable String reason) throws Exception {
+        // 使用工厂方法创建具体的支付方式实例
+        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+
+        log.info("申请退款");
+        aliPayNative.refund(orderNo, reason);
+        return R.ok();
+    }
+
 }
