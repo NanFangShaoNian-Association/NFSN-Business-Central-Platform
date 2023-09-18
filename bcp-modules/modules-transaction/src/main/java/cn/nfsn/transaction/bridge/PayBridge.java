@@ -28,7 +28,7 @@ public abstract class PayBridge {
      * 创建订单，调用Native支付接口
      *
      * @param productDTO 商品信息
-     * @return 包含code_url 和 订单号的Map
+     * @return 包含微信支付的订单二维码链接或者支付宝支付的HTML表单和订单号的Map
      * @throws Exception 抛出异常
      */
     public abstract Object createOrder(ProductDTO productDTO) throws Exception;
