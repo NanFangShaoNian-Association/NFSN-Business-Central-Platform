@@ -4,14 +4,18 @@ import cn.nfsn.common.core.domain.R;
 import cn.nfsn.transaction.bridge.PayBridge;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
+import cn.nfsn.transaction.model.dto.CancelOrderDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
+import cn.nfsn.transaction.model.dto.RefundDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 /**
  * @ClassName: AliPayController
@@ -29,6 +33,16 @@ public class AliPayController {
     @Resource
     private PayFactory payFactory;
 
+    private PayBridge aliPayNative;
+
+    /**
+     * 使用@PostConstruct注解来初始化aliPayNative
+     */
+    @PostConstruct
+    public void init() {
+        this.aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+    }
+
     /**
      * 统一收单下单并支付页面接口的调用
      *
@@ -37,23 +51,13 @@ public class AliPayController {
      */
     @ApiOperation("统一收单下单并支付页面接口的调用")
     @PostMapping("/trade/page/pay")
-    public R tradePagePay(@RequestBody ProductDTO productDTO) throws Exception {
-        log.info("统一收单下单并支付页面接口的调用");
-        // 使用工厂方法创建具体的支付方式实例
-        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+    public R tradePagePay(@RequestBody @Valid ProductDTO productDTO) throws Exception {
 
-        // 保存创建订单的结果
-        Object result = null;
+        log.info("统一收单下单并支付页面接口的被调用");
 
-        // 如果支付方式实例创建成功，调用其创建订单的方法
-        if (aliPayNative != null) {
-            result = aliPayNative.createOrder(productDTO);
-        }
+        Object result = aliPayNative.createOrder(productDTO);
 
-        // 判断返回的结果类型并进行相应的处理
         if (result instanceof String) {
-            //将form表单字符串返回给前端程序，之后前端将会调用自动提交脚本，进行表单的提交
-            //此时，表单会自动提交到action属性所指向的支付宝开放平台中，从而为用户展示一个支付页面
             return R.ok((String) result);
         } else {
             throw new RuntimeException("Unexpected result type: " + result.getClass().getName());
@@ -69,10 +73,8 @@ public class AliPayController {
     @ApiOperation("支付通知")
     @PostMapping("/trade/notify")
     public String tradeNotify(HttpServletRequest request){
-        // 使用工厂方法创建具体的支付方式实例
-        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
 
-        log.info("支付通知正在执行");
+        log.info("支付通知接口被调用");
 
         try {
             aliPayNative.handlePaymentNotification(request, OrderStatus.NOTPAY);
@@ -85,35 +87,32 @@ public class AliPayController {
 
     /**
      * 用户取消订单
-     * @param orderNo
-     * @return
+     *
+     * @param cancelOrderDTO 请求参数，包含订单编号
+     * @return R 返回结果
      */
     @ApiOperation("用户取消订单")
-    @PostMapping("/trade/close/{orderNo}")
-    public R cancel(@PathVariable String orderNo) throws Exception {
-        // 使用工厂方法创建具体的支付方式实例
-        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+    @PostMapping("/trade/close")
+    public R cancel(@RequestBody @Valid CancelOrderDTO cancelOrderDTO) throws Exception {
 
-        log.info("取消订单");
-        aliPayNative.cancelOrder(orderNo);
+        log.info("取消订单接口被调用");
+
+        aliPayNative.cancelOrder(cancelOrderDTO.getOrderNo());
         return R.ok();
     }
 
     /**
      * 申请退款
      *
-     * @param orderNo
-     * @param reason
-     * @return
+     * @param refundDTO 请求参数，包含订单编号和退款原因
+     * @return R 返回结果
      */
     @ApiOperation("申请退款")
-    @PostMapping("/trade/refund/{orderNo}/{reason}")
-    public R refunds(@PathVariable String orderNo, @PathVariable String reason) throws Exception {
-        // 使用工厂方法创建具体的支付方式实例
-        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+    @PostMapping("/trade/refund")
+    public R refunds(@RequestBody @Valid RefundDTO refundDTO) throws Exception {
+        log.info("退款接口被调用");
 
-        log.info("申请退款");
-        aliPayNative.refund(orderNo, reason);
+        aliPayNative.refund(refundDTO.getOrderNo(), refundDTO.getReason());
         return R.ok();
     }
 
