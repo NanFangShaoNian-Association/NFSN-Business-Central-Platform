@@ -181,8 +181,11 @@ public class WxPayController {
 
     /**
      * 退款结果通知接口
-     *
      * 当退款状态发生改变后，微信会把相关退款结果发送给商户。商户需要实现此接口以获取这些通知。
+     *
+     * @param request  HTTP 请求对象
+     * @param response HTTP 响应对象
+     * @return 返回响应消息的 JSON 字符串
      */
     @ApiOperation("退款结果通知")
     @PostMapping("/refunds/notify")
