@@ -4,21 +4,31 @@ import cn.hutool.core.net.URLDecoder;
 import cn.nfsn.common.core.enums.ResultCode;
 import cn.nfsn.common.core.exception.AliPayException;
 import cn.nfsn.transaction.config.AlipayClientConfig;
+import cn.nfsn.transaction.enums.AliPayTradeState;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.enums.PayType;
+import cn.nfsn.transaction.mapper.RefundInfoMapper;
 import cn.nfsn.transaction.model.dto.AlipayBizContentDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
 import cn.nfsn.transaction.model.entity.OrderInfo;
+import cn.nfsn.transaction.model.entity.RefundInfo;
 import cn.nfsn.transaction.service.OrderInfoService;
 import cn.nfsn.transaction.service.PaymentInfoService;
+import cn.nfsn.transaction.utils.OrderNoUtils;
+import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.internal.util.file.IOUtils;
+import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeCloseResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -59,6 +69,9 @@ public class AliPayNative implements IPayMode {
 
     @Resource
     private PaymentInfoService paymentInfoService;
+
+    @Resource
+    private RefundInfoMapper refundInfoMapper;
 
     /**
      * 重入锁，用于处理并发问题
@@ -370,11 +383,58 @@ public class AliPayNative implements IPayMode {
      * 取消订单
      *
      * @param orderNo 订单号
-     * @throws Exception 抛出异常
      */
     @Override
-    public void cancelOrder(String orderNo) throws Exception {
+    public void cancelOrder(String orderNo) {
+        //调用支付宝提供的统一收单交易关闭接口
+        this.closeOrder(orderNo);
 
+        //更新用户订单状态
+        orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.CANCEL);
+    }
+
+    /**
+     * 关单接口的调用
+     *
+     * @param orderNo 订单号
+     */
+    private void closeOrder(String orderNo) {
+
+        // 日志记录开始调用关单接口信息，输出订单号
+        log.info("关单接口的调用，订单号 ===> {}", orderNo);
+
+        try {
+            // 创建支付宝关闭交易请求对象
+            AlipayTradeCloseRequest request = new AlipayTradeCloseRequest();
+
+            // 创建业务请求参数的Json对象
+            JSONObject bizContent = new JSONObject();
+
+            // 设置业务请求参数：订单号
+            bizContent.put("out_trade_no", orderNo);
+
+            // 将业务请求参数设置到请求对象中
+            request.setBizContent(bizContent.toString());
+
+            // 发送请求，获取支付宝返回的关闭交易响应对象
+            AlipayTradeCloseResponse response = alipayClient.execute(request);
+
+            // 判断响应结果是否成功
+            if(response.isSuccess()){
+                // 日志记录成功调用关单接口的返回信息
+                log.info("调用成功，返回结果 ===> " + response.getBody());
+            } else {
+                // 日志记录失败调用关单接口的返回错误码和错误信息
+                log.info("调用失败，返回码 ===> " + response.getCode() + ", 返回描述 ===> " + response.getMsg());
+                // 当调用失败时，抛出运行时异常
+                throw new RuntimeException("关单接口的调用失败");
+            }
+
+        } catch (AlipayApiException e) {
+            // 打印堆栈信息，并抛出运行时异常
+            e.printStackTrace();
+            throw new RuntimeException("关单接口的调用失败");
+        }
     }
 
     /**
@@ -386,8 +446,143 @@ public class AliPayNative implements IPayMode {
      */
     @Override
     public void refund(String orderNo, String reason) throws Exception {
+        try {
+            log.info("调用退款API");
 
+            /**
+             * 创建退款单
+             */
+            RefundInfo refundInfo = createRefundByOrderNoForAliPay(orderNo, reason);
+
+            /**
+             * 调用统一收单交易退款接口
+             */
+            AlipayTradeRefundRequest request = new AlipayTradeRefundRequest ();
+
+            /**
+             * 组装当前业务方法的请求参数
+             */
+            JSONObject bizContent = new JSONObject();
+            /**
+             * 订单编号
+             */
+            bizContent.put("out_trade_no", orderNo);
+            BigDecimal refund = new BigDecimal(refundInfo.getRefund().toString()).divide(new BigDecimal("100"));
+            /**
+             * 退款金额：不能大于支付金额
+             */
+            bizContent.put("refund_amount", refund);
+            /**
+             * 退款原因(可选)
+             */
+            bizContent.put("refund_reason", reason);
+
+            request.setBizContent(bizContent.toString());
+
+            /**
+             * 执行请求，调用支付宝接口
+             */
+            AlipayTradeRefundResponse response = alipayClient.execute(request);
+
+            if(response.isSuccess()){
+                log.info("调用成功，返回结果 ===> " + response.getBody());
+
+                /**
+                 * 更新订单状态
+                 */
+                orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_SUCCESS);
+
+                /**
+                 * 更新退款单, 退款成功
+                 */
+                updateRefundForAliPay(
+                        refundInfo.getRefundNo(),
+                        response.getBody(),
+                        AliPayTradeState.REFUND_SUCCESS.getType()
+                );
+
+            } else {
+                log.info("调用失败，返回码 ===> " + response.getCode() + ", 返回描述 ===> " + response.getMsg());
+
+                /**
+                 * 更新订单状态
+                 */
+                orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_ABNORMAL);
+
+                /**
+                 * 更新退款单, 退款失败
+                 */
+                updateRefundForAliPay(
+                        refundInfo.getRefundNo(),
+                        response.getBody(),
+                        AliPayTradeState.REFUND_ERROR.getType()
+                );
+            }
+
+        } catch (AlipayApiException e) {
+            e.printStackTrace();
+            throw new RuntimeException("创建退款申请失败");
+        }
     }
+
+    /**
+     * 根据订单号和退款原因创建阿里支付的退款订单
+     *
+     * @param orderNo 订单编号
+     * @param reason 退款原因
+     * @return 返回创建的退款订单信息
+     */
+    private RefundInfo createRefundByOrderNoForAliPay(String orderNo, String reason) {
+
+        // 根据订单号获取订单信息
+        OrderInfo orderInfo = orderInfoService.getOrderByOrderNo(orderNo);
+
+        // 初始化退款订单信息
+        RefundInfo refundInfo = new RefundInfo();
+
+        // 设置订单编号
+        refundInfo.setOrderNo(orderNo);
+
+        // 设置退款单编号，通过工具类生成
+        refundInfo.setRefundNo(OrderNoUtils.getRefundNo());
+
+        // 设置原订单金额(单位：分)
+        refundInfo.setTotalFee(orderInfo.getTotalFee());
+
+        // 设置退款金额(单位：分)，默认为原订单金额
+        refundInfo.setRefund(orderInfo.getTotalFee());
+
+        // 设置退款原因
+        refundInfo.setReason(reason);
+
+        // 保存退款订单到数据库
+        refundInfoMapper.insert(refundInfo);
+
+        return refundInfo;
+    }
+
+    /**
+     * 更新退款记录
+     *
+     * @param refundNo 退款单编号
+     * @param content 响应结果内容
+     * @param refundStatus 退款状态
+     */
+    private void updateRefundForAliPay(String refundNo, String content, String refundStatus) {
+
+        // 根据退款单编号构造查询条件
+        QueryWrapper<RefundInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("refund_no", refundNo);
+
+        // 构造要修改的退款信息对象，并设置退款状态与响应结果内容
+        RefundInfo refundInfo = new RefundInfo();
+        refundInfo.setRefundStatus(refundStatus);
+        refundInfo.setContentReturn(content);
+
+        // 使用查询条件和待更新的退款信息，进行退款记录的更新操作
+        refundInfoMapper.update(refundInfo, queryWrapper);
+    }
+
 
     /**
      * 处理退款单
