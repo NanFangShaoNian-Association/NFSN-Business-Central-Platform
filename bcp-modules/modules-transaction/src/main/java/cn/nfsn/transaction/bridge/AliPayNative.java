@@ -10,12 +10,12 @@ import cn.nfsn.transaction.enums.PayType;
 import cn.nfsn.transaction.mapper.RefundInfoMapper;
 import cn.nfsn.transaction.model.dto.AlipayBizContentDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
-import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
+import cn.nfsn.transaction.model.dto.ResponsePayNotifyDTO;
 import cn.nfsn.transaction.model.entity.OrderInfo;
 import cn.nfsn.transaction.model.entity.RefundInfo;
 import cn.nfsn.transaction.service.OrderInfoService;
 import cn.nfsn.transaction.service.PaymentInfoService;
-import cn.nfsn.transaction.utils.OrderNoUtils;
+import cn.nfsn.transaction.service.RefundInfoService;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
@@ -40,17 +40,21 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import java.util.Arrays;
-import java.util.Map;
 
-import static cn.nfsn.transaction.constant.AliPayConstant.PRODUCT_CODE;
+import static cn.nfsn.transaction.constant.AliPayConstant.*;
+import static cn.nfsn.transaction.constant.OrderConstant.APP_ID;
 
 /**
  * @ClassName: AliPayNative
- * @Description:
+ * @Description: 本类主要用于处理与支付宝原生支付（AliPayNative）有关的业务逻辑，包括创建订单、处理支付通知、取消订单以及退款等功能。
+ * 对外提供统一的接口，以规范支付流程和实现支付功能。具体实现了 IPayMode 接口中定义的各类方法。
+ * 使用阿里支付宝SDK进行API调用，实现与支付宝的交互，包括签名验证、支付请求发送等操作。
  * @Author: atnibamaitay
  * @CreateTime: 2023/9/14 0014 18:21
  **/
@@ -58,25 +62,22 @@ import static cn.nfsn.transaction.constant.AliPayConstant.PRODUCT_CODE;
 @Component
 public class AliPayNative implements IPayMode {
 
-    @Resource
-    private OrderInfoService orderInfoService;
-
-    @Resource
-    private AlipayClientConfig config;
-
-    @Resource
-    private AlipayClient alipayClient;
-
-    @Resource
-    private PaymentInfoService paymentInfoService;
-
-    @Resource
-    private RefundInfoMapper refundInfoMapper;
-
     /**
      * 重入锁，用于处理并发问题
      */
     private final ReentrantLock lock = new ReentrantLock();
+    @Resource
+    private OrderInfoService orderInfoService;
+    @Resource
+    private AlipayClientConfig config;
+    @Resource
+    private AlipayClient alipayClient;
+    @Resource
+    private PaymentInfoService paymentInfoService;
+    @Resource
+    private RefundInfoMapper refundInfoMapper;
+    @Resource
+    private RefundInfoService refundInfoService;
 
     /**
      * 创建订单的方法
@@ -93,15 +94,15 @@ public class AliPayNative implements IPayMode {
             OrderInfo orderInfo = orderInfoService.createOrderByProductId(productDTO, PayType.ALIPAY.getType());
 
             //获取订单二维码URL
-            String codeUrl = orderInfo.getCodeUrl();
+            String paymentFormCode = orderInfo.getPaymentData();
 
             //检查订单是否存在且二维码URL是否已保存
-            if (orderInfo != null && !StringUtils.isEmpty(codeUrl)) {
+            if (orderInfo != null && !StringUtils.isEmpty(paymentFormCode)) {
                 // 添加订单号到日志
                 log.info("订单：{} 已存在，二维码已保存", orderInfo.getOrderNo());
 
-                //返回二维码和订单号
-                return codeUrl;
+                //返回二维码
+                return paymentFormCode;
             }
 
             // 调用支付宝接口
@@ -126,18 +127,17 @@ public class AliPayNative implements IPayMode {
             ObjectMapper objectMapper = new ObjectMapper();
             // 将Java对象转换为JSON格式的字符串
             String jsonString = objectMapper.writeValueAsString(alipayBizContentDTO);
-            System.out.println("==================TEST: " + jsonString);
             request.setBizContent(jsonString.toString());
 
             // 执行请求，调用支付宝接口
             AlipayTradePagePayResponse response = alipayClient.pageExecute(request);
 
-            if(response.isSuccess()){
+            if (response.isSuccess()) {
                 log.info("调用成功，返回结果 ===> " + response.getBody());
                 //保存结果
-                codeUrl = response.getBody();
+                paymentFormCode = response.getBody();
                 String orderNo = orderInfo.getOrderNo();
-                orderInfoService.saveCodeUrl(orderNo, codeUrl);
+                orderInfoService.saveCodeUrl(orderNo, paymentFormCode);
 
                 return response.getBody();
             } else {
@@ -151,31 +151,49 @@ public class AliPayNative implements IPayMode {
     }
 
     /**
-     * 处理支付通知的方法。
+     * 处理支付宝支付通知
      *
-     * @param request        HttpServletRequest对象，用于获取请求参数等信息
-     * @param successStatus  订单成功状态
-     * @return               返回值为 ResponseWxPayNotifyDTO 对象
-     * @throws IOException              如果从request中读取参数出现异常
-     * @throws GeneralSecurityException 如果在进行签名验证时出现异常
+     * @param request       当前请求
+     * @param successStatus 成功状态
+     * @return 响应支付通知的DTO
+     * @throws IOException              如果解析请求或读取内容出现问题，抛出IO异常
+     * @throws GeneralSecurityException 如果签名验证失败，抛出安全异常
      */
     @Override
-    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+    public ResponsePayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+        // 从请求中解析参数
         Map<String, String> params = parseParamsFromRequest(request);
+
+        // 验证签名
         validateSign(params);
-        String outTradeNo = getStringParam(params, "out_trade_no");
+
+        // 获取并存储订单号
+        String outTradeNo = getStringParam(params, OUT_TRADE_NO);
+
+        // 获取并验证订单信息
         OrderInfo order = getAndValidateOrder(outTradeNo);
+
+        // 验证金额
         validateAmount(params, order);
+
+        // 验证卖家ID
         validateSellerId(params);
+
+        // 验证应用ID
         validateAppId(params);
+
+        // 验证交易状态
         validateTradeStatus(params);
 
+        // 将解析后的参数转为对象存储
         Map<String, Object> paramsObject = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             paramsObject.put(entry.getKey(), entry.getValue());
         }
 
+        // 处理订单
         processOrder(paramsObject, successStatus);
+
         return null;
     }
 
@@ -183,7 +201,7 @@ public class AliPayNative implements IPayMode {
      * 从请求中解析参数。
      *
      * @param request HttpServletRequest对象，用于获取请求参数等信息
-     * @return        返回值为一个Map，键和值都是字符串类型
+     * @return 返回值为一个Map，键和值都是字符串类型
      * @throws IOException 如果从request中读取参数出现异常
      */
     private Map<String, String> parseParamsFromRequest(HttpServletRequest request) throws IOException {
@@ -201,9 +219,8 @@ public class AliPayNative implements IPayMode {
      * 验证签名是否正确。
      *
      * @param params 包含了所有需要验证的参数
-     * @throws GeneralSecurityException 如果在进行签名验证时出现异常
      */
-    private void validateSign(Map<String, String> params) throws GeneralSecurityException {
+    private void validateSign(Map<String, String> params) {
         try {
             boolean signVerified = AlipaySignature.rsaCheckV1(
                     params,
@@ -222,11 +239,11 @@ public class AliPayNative implements IPayMode {
      * 获取并验证订单信息。
      *
      * @param outTradeNo 订单编号
-     * @return           返回值为 OrderInfo 对象
+     * @return 返回值为 OrderInfo 对象
      */
     private OrderInfo getAndValidateOrder(String outTradeNo) {
         OrderInfo order = orderInfoService.getOrderByOrderNo(outTradeNo);
-        if(order == null){
+        if (order == null) {
             throw new AliPayException(ResultCode.ORDER_NOT_EXIST);
         }
         return order;
@@ -239,10 +256,10 @@ public class AliPayNative implements IPayMode {
      * @param order  订单信息
      */
     private void validateAmount(Map<String, String> params, OrderInfo order) {
-        String totalAmount = getStringParam(params, "total_amount");
+        String totalAmount = getStringParam(params, TOTAL_AMOUNT);
         int totalAmountInt = new BigDecimal(totalAmount).multiply(new BigDecimal("100")).intValue();
         int totalFeeInt = order.getTotalFee().intValue();
-        if(totalAmountInt != totalFeeInt){
+        if (totalAmountInt != totalFeeInt) {
             throw new AliPayException(ResultCode.CREATE_ORDER_FAIL);
         }
     }
@@ -253,8 +270,8 @@ public class AliPayNative implements IPayMode {
      * @param params 包含了所有需要验证的参数
      */
     private void validateSellerId(Map<String, String> params) {
-        String sellerId = getStringParam(params, "seller_id");
-        if(!sellerId.equals(config.getSellerId())){
+        String sellerId = getStringParam(params, SELLER_ID);
+        if (!sellerId.equals(config.getSellerId())) {
             throw new AliPayException(ResultCode.INSERT_ORDER_FAIL);
         }
     }
@@ -265,8 +282,8 @@ public class AliPayNative implements IPayMode {
      * @param params 包含了所有需要验证的参数
      */
     private void validateAppId(Map<String, String> params) {
-        String appId = getStringParam(params, "app_id");
-        if(!appId.equals(config.getAppId())){
+        String appId = getStringParam(params, APP_ID);
+        if (!appId.equals(config.getAppId())) {
             throw new AliPayException(ResultCode.PRODUCT_OR_PAY_TYPE_NULL);
         }
     }
@@ -277,8 +294,8 @@ public class AliPayNative implements IPayMode {
      * @param params 包含了所有需要验证的参数
      */
     private void validateTradeStatus(Map<String, String> params) {
-        String tradeStatus = getStringParam(params, "trade_status");
-        if(!"TRADE_SUCCESS".equals(tradeStatus)){
+        String tradeStatus = getStringParam(params, TRADE_STATUS);
+        if (!"TRADE_SUCCESS".equals(tradeStatus)) {
             throw new AliPayException(ResultCode.ORDER_PAYING);
         }
     }
@@ -288,7 +305,7 @@ public class AliPayNative implements IPayMode {
      *
      * @param params 包含了所有需要验证的参数
      * @param key    需要获取值的键
-     * @return       返回对应键的值，如果没有找到则抛出异常
+     * @return 返回对应键的值，如果没有找到则抛出异常
      */
     private String getStringParam(Map<String, String> params, String key) {
         String value = params.get(key);
@@ -297,7 +314,6 @@ public class AliPayNative implements IPayMode {
         }
         return value;
     }
-
 
     /**
      * 将查询参数字符串分割为键值对.
@@ -339,22 +355,21 @@ public class AliPayNative implements IPayMode {
     public void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException {
         log.info("开始处理订单");
 
-        Object orderNoObj = bodyMap.get("out_trade_no");
+        Object orderNoObj = bodyMap.get(OUT_TRADE_NO);
         if (!(orderNoObj instanceof String)) {
             throw new RuntimeException("Unexpected type for 'out_trade_no': " + (orderNoObj == null ? "null" : orderNoObj.getClass()));
         }
 
         // 从参数中获取订单号
-        String orderNo = bodyMap.get("out_trade_no").toString();
+        String orderNo = bodyMap.get(OUT_TRADE_NO).toString();
 
         /*
          * 尝试获取锁：
          * 如果成功获取则立即返回true，获取失败则立即返回false。
          * 不必一直等待锁的释放
          */
-        if(lock.tryLock()) {
+        if (lock.tryLock()) {
             try {
-
                 /*
                  * 处理重复通知
                  * 接口调用的幂等性：无论接口被调用多少次，以下业务只执行一次
@@ -367,11 +382,11 @@ public class AliPayNative implements IPayMode {
                 // 更新订单状态为成功
                 orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.SUCCESS);
 
+                // 更新支付日志
                 Map<String, String> bodyMapString = convertParamsToStringKey(bodyMap);
 
                 // 记录支付日志
                 paymentInfoService.createPaymentInfoForAliPay(bodyMapString);
-
             } finally {
                 // 处理完毕后，需要主动释放锁
                 lock.unlock();
@@ -394,14 +409,14 @@ public class AliPayNative implements IPayMode {
     }
 
     /**
-     * 关单接口的调用
+     * 关闭订单
      *
      * @param orderNo 订单号
      */
     private void closeOrder(String orderNo) {
 
         // 日志记录开始调用关单接口信息，输出订单号
-        log.info("关单接口的调用，订单号 ===> {}", orderNo);
+        log.info("关闭订单接口被调用，订单号 ===> {}", orderNo);
 
         try {
             // 创建支付宝关闭交易请求对象
@@ -411,7 +426,7 @@ public class AliPayNative implements IPayMode {
             JSONObject bizContent = new JSONObject();
 
             // 设置业务请求参数：订单号
-            bizContent.put("out_trade_no", orderNo);
+            bizContent.put(OUT_TRADE_NO, orderNo);
 
             // 将业务请求参数设置到请求对象中
             request.setBizContent(bizContent.toString());
@@ -420,7 +435,7 @@ public class AliPayNative implements IPayMode {
             AlipayTradeCloseResponse response = alipayClient.execute(request);
 
             // 判断响应结果是否成功
-            if(response.isSuccess()){
+            if (response.isSuccess()) {
                 // 日志记录成功调用关单接口的返回信息
                 log.info("调用成功，返回结果 ===> " + response.getBody());
             } else {
@@ -429,7 +444,6 @@ public class AliPayNative implements IPayMode {
                 // 当调用失败时，抛出运行时异常
                 throw new RuntimeException("关单接口的调用失败");
             }
-
         } catch (AlipayApiException e) {
             // 打印堆栈信息，并抛出运行时异常
             e.printStackTrace();
@@ -449,135 +463,82 @@ public class AliPayNative implements IPayMode {
         try {
             log.info("调用退款API");
 
-            /**
-             * 创建退款单
-             */
-            RefundInfo refundInfo = createRefundByOrderNoForAliPay(orderNo, reason);
+            // 创建退款单
+            RefundInfo refundInfo = refundInfoService.createRefundByOrderNo(orderNo, reason);
 
-            /**
-             * 调用统一收单交易退款接口
-             */
-            AlipayTradeRefundRequest request = new AlipayTradeRefundRequest ();
+            // 调用统一收单交易退款接口
+            AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
 
-            /**
-             * 组装当前业务方法的请求参数
-             */
+            // 组装当前业务方法的请求参数
             JSONObject bizContent = new JSONObject();
-            /**
-             * 订单编号
-             */
-            bizContent.put("out_trade_no", orderNo);
+
+            // 订单编号
+            bizContent.put(OUT_TRADE_NO, orderNo);
             BigDecimal refund = new BigDecimal(refundInfo.getRefund().toString()).divide(new BigDecimal("100"));
-            /**
-             * 退款金额：不能大于支付金额
-             */
-            bizContent.put("refund_amount", refund);
-            /**
-             * 退款原因(可选)
-             */
-            bizContent.put("refund_reason", reason);
+
+            // 退款金额：不能大于支付金额
+            bizContent.put(REFUND_AMOUNT, refund);
+
+            // 退款原因(可选)
+            bizContent.put(REFUND_REASON, reason);
 
             request.setBizContent(bizContent.toString());
 
-            /**
-             * 执行请求，调用支付宝接口
-             */
+            // 执行请求，调用支付宝接口
             AlipayTradeRefundResponse response = alipayClient.execute(request);
 
-            if(response.isSuccess()){
+            if (response.isSuccess()) {
                 log.info("调用成功，返回结果 ===> " + response.getBody());
 
-                /**
-                 * 更新订单状态
-                 */
+                // 更新订单状态
                 orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_SUCCESS);
 
-                /**
-                 * 更新退款单, 退款成功
-                 */
+                // 更新退款单, 退款成功
                 updateRefundForAliPay(
                         refundInfo.getRefundNo(),
                         response.getBody(),
                         AliPayTradeState.REFUND_SUCCESS.getType()
                 );
-
             } else {
                 log.info("调用失败，返回码 ===> " + response.getCode() + ", 返回描述 ===> " + response.getMsg());
 
-                /**
-                 * 更新订单状态
-                 */
+                // 更新订单状态
                 orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_ABNORMAL);
 
-                /**
-                 * 更新退款单, 退款失败
-                 */
+                // 更新退款单, 退款失败
                 updateRefundForAliPay(
                         refundInfo.getRefundNo(),
                         response.getBody(),
                         AliPayTradeState.REFUND_ERROR.getType()
                 );
             }
-
         } catch (AlipayApiException e) {
             e.printStackTrace();
             throw new RuntimeException("创建退款申请失败");
         }
     }
 
-    /**
-     * 根据订单号和退款原因创建阿里支付的退款订单
-     *
-     * @param orderNo 订单编号
-     * @param reason 退款原因
-     * @return 返回创建的退款订单信息
-     */
-    private RefundInfo createRefundByOrderNoForAliPay(String orderNo, String reason) {
-
-        // 根据订单号获取订单信息
-        OrderInfo orderInfo = orderInfoService.getOrderByOrderNo(orderNo);
-
-        // 初始化退款订单信息
-        RefundInfo refundInfo = new RefundInfo();
-
-        // 设置订单编号
-        refundInfo.setOrderNo(orderNo);
-
-        // 设置退款单编号，通过工具类生成
-        refundInfo.setRefundNo(OrderNoUtils.getRefundNo());
-
-        // 设置原订单金额(单位：分)
-        refundInfo.setTotalFee(orderInfo.getTotalFee());
-
-        // 设置退款金额(单位：分)，默认为原订单金额
-        refundInfo.setRefund(orderInfo.getTotalFee());
-
-        // 设置退款原因
-        refundInfo.setReason(reason);
-
-        // 保存退款订单到数据库
-        refundInfoMapper.insert(refundInfo);
-
-        return refundInfo;
-    }
 
     /**
      * 更新退款记录
      *
-     * @param refundNo 退款单编号
-     * @param content 响应结果内容
+     * @param refundNo     退款单编号
+     * @param content      响应结果内容
      * @param refundStatus 退款状态
      */
     private void updateRefundForAliPay(String refundNo, String content, String refundStatus) {
 
         // 根据退款单编号构造查询条件
         QueryWrapper<RefundInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("refund_no", refundNo);
+        queryWrapper.eq(REFUND_NO, refundNo);
 
         // 构造要修改的退款信息对象，并设置退款状态与响应结果内容
         RefundInfo refundInfo = new RefundInfo();
         refundInfo.setRefundStatus(refundStatus);
         refundInfo.setContentReturn(content);
+
+        // TODO: 还需要记录退款单ID
+
 
         // 使用查询条件和待更新的退款信息，进行退款记录的更新操作
         refundInfoMapper.update(refundInfo, queryWrapper);
