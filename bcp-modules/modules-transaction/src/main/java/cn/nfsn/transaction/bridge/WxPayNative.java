@@ -8,12 +8,12 @@ import cn.nfsn.transaction.mapper.RefundInfoMapper;
 import cn.nfsn.transaction.model.dto.AmountDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.RequestWxCodeDTO;
-import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
+import cn.nfsn.transaction.model.dto.ResponsePayNotifyDTO;
 import cn.nfsn.transaction.model.entity.OrderInfo;
 import cn.nfsn.transaction.model.entity.RefundInfo;
 import cn.nfsn.transaction.service.OrderInfoService;
 import cn.nfsn.transaction.service.PaymentInfoService;
-import cn.nfsn.transaction.utils.OrderNoUtils;
+import cn.nfsn.transaction.service.RefundInfoService;
 import cn.nfsn.transaction.utils.WechatPay2ValidatorForRequest;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.gson.Gson;
@@ -75,6 +75,9 @@ public class WxPayNative implements IPayMode {
     @Resource
     private RefundInfoMapper refundInfoMapper;
 
+    @Resource
+    private RefundInfoService refundInfoService;
+
     /**
      * 重入锁，用于处理并发问题
      */
@@ -84,7 +87,7 @@ public class WxPayNative implements IPayMode {
      * 创建订单，调用Native支付接口
      *
      * @param productDTO 商品信息
-     * @return 包含code_url 和 订单号的Map
+     * @return 包含 code_url 和订单号的Map
      * @throws Exception 抛出异常
      */
     @Override
@@ -97,7 +100,7 @@ public class WxPayNative implements IPayMode {
         OrderInfo orderInfo = orderInfoService.createOrderByProductId(productDTO, PayType.WXPAY.getType());
 
         //获取订单二维码URL
-        String codeUrl = orderInfo.getCodeUrl();
+        String codeUrl = orderInfo.getPaymentData();
 
         //检查订单是否存在且二维码URL是否已保存
         if (orderInfo != null && !StringUtils.isEmpty(codeUrl)) {
@@ -226,12 +229,12 @@ public class WxPayNative implements IPayMode {
      * 处理微信支付通知，验证请求的有效性，并进行订单处理.
      *
      * @param request HttpServletRequest 对象，表示一个 HTTP 请求
-     * @return ResponseWxPayNotifyDTO 响应对象，包含响应码和信息
+     * @return ResponsePayNotifyDTO 响应对象，包含响应码和信息
      * @throws IOException              如果读取请求数据时出错
      * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
      */
     @Override
-    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+    public ResponsePayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
 
         // 实例化 Gson 对象，用于 JSON 数据解析
         Gson gson = new Gson();
@@ -254,7 +257,7 @@ public class WxPayNative implements IPayMode {
         if (!wechatPay2ValidatorForRequest.validate(request)) {
             // 若验证失败，记录错误信息并返回错误消息
             log.error("通知验签失败");
-            return new ResponseWxPayNotifyDTO(ERROR_CODE, ERROR_VALIDATION_FAILED_MSG);
+            return new ResponsePayNotifyDTO(ERROR_CODE, ERROR_VALIDATION_FAILED_MSG);
         }
 
         // 验证成功，记录相关信息
@@ -267,7 +270,7 @@ public class WxPayNative implements IPayMode {
         wxPayNative.processOrder(bodyMap, successStatus);
 
         // 处理完成，返回成功消息
-        return new ResponseWxPayNotifyDTO(SUCCESS_CODE, SUCCESS_MSG);
+        return new ResponsePayNotifyDTO(SUCCESS_CODE, SUCCESS_MSG);
     }
 
 
@@ -410,7 +413,7 @@ public class WxPayNative implements IPayMode {
 
         // 创建并记录退款单信息
         log.info("创建退款单记录");
-        RefundInfo refundsInfo = createRefundByOrderNo(orderNo, reason);
+        RefundInfo refundsInfo = refundInfoService.createRefundByOrderNo(orderNo, reason);
 
         // 构造退款API的URL
         log.info("调用退款API");
@@ -448,7 +451,6 @@ public class WxPayNative implements IPayMode {
         // 调用sendRequest方法发送请求并处理结果
         try {
             Map<String, String> responseResult = sendRequest(url, paramsMap, "退款");
-            System.out.println("[TEST111]" + responseResult);
             // 更新订单状态为正在处理退款
             orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_PROCESSING);
 
@@ -461,30 +463,6 @@ public class WxPayNative implements IPayMode {
         } catch (IOException e) {
             throw new RuntimeException("退款异常", e);
         }
-    }
-
-    /**
-     * 根据订单号以及退款原因创建退款订单
-     * @param orderNo 订单编号
-     * @param reason 退款原因
-     * @return 创建的退款订单信息
-     */
-    public RefundInfo createRefundByOrderNo(String orderNo, String reason) {
-        //根据订单号获取订单信息
-        OrderInfo orderInfo = orderInfoService.getOrderByOrderNo(orderNo);
-
-        //创建并初始化退款订单信息
-        RefundInfo refundInfo = new RefundInfo();
-        refundInfo.setOrderNo(orderNo);
-        refundInfo.setRefundNo(OrderNoUtils.getRefundNo());
-        refundInfo.setTotalFee(orderInfo.getTotalFee());
-        refundInfo.setRefund(orderInfo.getTotalFee());
-        refundInfo.setReason(reason);
-
-        //保存退款订单到数据库
-        refundInfoMapper.insert(refundInfo);
-
-        return refundInfo;
     }
 
     /**
