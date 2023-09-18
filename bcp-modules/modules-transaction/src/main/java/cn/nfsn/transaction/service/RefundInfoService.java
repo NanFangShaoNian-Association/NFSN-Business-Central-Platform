@@ -10,4 +10,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface RefundInfoService extends IService<RefundInfo> {
 
+    /**
+     * 根据订单号和退款原因创建阿里支付的退款订单
+     *
+     * @param orderNo 订单编号
+     * @param reason 退款原因
+     * @return 返回创建的退款订单信息
+     */
+    RefundInfo createRefundByOrderNo(String orderNo, String reason);
 }
