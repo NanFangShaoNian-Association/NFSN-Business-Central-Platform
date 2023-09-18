@@ -44,12 +44,12 @@ public class AliPayController {
     }
 
     /**
-     * 统一收单下单并支付页面接口的调用
+     * 统一收单下单并支付页面
      *
      * @param productDTO 商品信息
      * @return 返回结果
      */
-    @ApiOperation("统一收单下单并支付页面接口的调用")
+    @ApiOperation("统一收单下单并支付页面")
     @PostMapping("/trade/page/pay")
     public R tradePagePay(@RequestBody @Valid ProductDTO productDTO) throws Exception {
 
@@ -65,12 +65,12 @@ public class AliPayController {
     }
 
     /**
-     * 支付通知处理接口，用于处理支付宝的异步通知
+     * 处理支付通知接口，用于处理支付宝的异步通知
      *
      * @param request 请求参数，包含支付宝异步通知中的全部信息
      * @return 处理结果，成功返回"success"，失败返回"failure"
      */
-    @ApiOperation("支付通知")
+    @ApiOperation("支付通知处理")
     @PostMapping("/trade/notify")
     public String tradeNotify(HttpServletRequest request){
 
@@ -86,12 +86,12 @@ public class AliPayController {
     }
 
     /**
-     * 用户取消订单
+     * 取消订单
      *
      * @param cancelOrderDTO 请求参数，包含订单编号
      * @return R 返回结果
      */
-    @ApiOperation("用户取消订单")
+    @ApiOperation("取消订单")
     @PostMapping("/trade/close")
     public R cancel(@RequestBody @Valid CancelOrderDTO cancelOrderDTO) throws Exception {
 
@@ -102,12 +102,12 @@ public class AliPayController {
     }
 
     /**
-     * 申请退款
+     * 退款
      *
      * @param refundDTO 请求参数，包含订单编号和退款原因
      * @return R 返回结果
      */
-    @ApiOperation("申请退款")
+    @ApiOperation("退款")
     @PostMapping("/trade/refund")
     public R refunds(@RequestBody @Valid RefundDTO refundDTO) throws Exception {
         log.info("退款接口被调用");
