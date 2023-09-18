@@ -16,11 +16,10 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.alipay.api.internal.util.file.IOUtils;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -28,18 +27,14 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static cn.nfsn.transaction.constant.AliPayConstant.PRODUCT_CODE;
 
@@ -143,87 +138,153 @@ public class AliPayNative implements IPayMode {
     }
 
     /**
-     * 处理支付宝支付通知，验证请求的有效性，并进行订单处理.
+     * 处理支付通知的方法。
      *
-     * @param request HttpServletRequest 对象，表示一个 HTTP 请求
-     * @param successStatus 成功状态
-     * @return ResponseWxPayNotifyDTO   响应对象，包含响应码和信息
-     * @throws IOException              如果读取请求数据时出错
-     * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
+     * @param request        HttpServletRequest对象，用于获取请求参数等信息
+     * @param successStatus  订单成功状态
+     * @return               返回值为 ResponseWxPayNotifyDTO 对象
+     * @throws IOException              如果从request中读取参数出现异常
+     * @throws GeneralSecurityException 如果在进行签名验证时出现异常
      */
     @Override
     public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
-        Gson gson = new Gson();
+        Map<String, String> params = parseParamsFromRequest(request);
+        validateSign(params);
+        String outTradeNo = getStringParam(params, "out_trade_no");
+        OrderInfo order = getAndValidateOrder(outTradeNo);
+        validateAmount(params, order);
+        validateSellerId(params);
+        validateAppId(params);
+        validateTradeStatus(params);
 
-        // 从请求URL中获取参数并转换为Map
-        Map<String, Object> params = Arrays.stream(request.getQueryString().split("&"))
-                .map(this::splitQueryParameter)
-                .collect(Collectors.groupingBy(AbstractMap.SimpleEntry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())))
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(0)));
+        Map<String, Object> paramsObject = new HashMap<>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            paramsObject.put(entry.getKey(), entry.getValue());
+        }
 
-        // 解析业务内容
-        Type type = new TypeToken<Map<String, Object>>() {}.getType();
-        Map<String, Object> bizContent = gson.fromJson(params.get("biz_content").toString(), type);
-        // 将业务内容合并到主参数
-        params.putAll(bizContent);
-        log.info("支付宝支付通知 ===> " + params);
+        processOrder(paramsObject, successStatus);
+        return null;
+    }
 
-        // 验证签名
-        boolean signVerified;
+    /**
+     * 从请求中解析参数。
+     *
+     * @param request HttpServletRequest对象，用于获取请求参数等信息
+     * @return        返回值为一个Map，键和值都是字符串类型
+     * @throws IOException 如果从request中读取参数出现异常
+     */
+    private Map<String, String> parseParamsFromRequest(HttpServletRequest request) throws IOException {
+        String paramsStr = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
         try {
-            signVerified = AlipaySignature.rsaCheckV1(
-                    convertParamsToStringKey(params),
+            return Arrays.stream(paramsStr.split("&"))
+                    .map(this::splitQueryParameter)
+                    .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+        } catch (Exception e) {
+            throw new RuntimeException("Error parsing params: " + paramsStr, e);
+        }
+    }
+
+    /**
+     * 验证签名是否正确。
+     *
+     * @param params 包含了所有需要验证的参数
+     * @throws GeneralSecurityException 如果在进行签名验证时出现异常
+     */
+    private void validateSign(Map<String, String> params) throws GeneralSecurityException {
+        try {
+            boolean signVerified = AlipaySignature.rsaCheckV1(
+                    params,
                     config.getAlipayPublicKey(),
                     AlipayConstants.CHARSET_UTF8,
                     AlipayConstants.SIGN_TYPE_RSA2);
+            if (!signVerified) {
+                throw new AliPayException(ResultCode.CREATE_ORDER_CONTRAST_LOCK_FAIL);
+            }
         } catch (AlipayApiException e) {
             throw new RuntimeException(e);
         }
+    }
 
-        if (!signVerified) {
-            throw new AliPayException(ResultCode.CREATE_ORDER_CONTRAST_LOCK_FAIL);
-        }
-
-        // 获取并验证订单信息
-        String outTradeNo = checkAndGetStringFromParams(params, "out_trade_no");
+    /**
+     * 获取并验证订单信息。
+     *
+     * @param outTradeNo 订单编号
+     * @return           返回值为 OrderInfo 对象
+     */
+    private OrderInfo getAndValidateOrder(String outTradeNo) {
         OrderInfo order = orderInfoService.getOrderByOrderNo(outTradeNo);
         if(order == null){
             throw new AliPayException(ResultCode.ORDER_NOT_EXIST);
         }
+        return order;
+    }
 
-        // 校验订单金额
-        String totalAmount = checkAndGetStringFromParams(params, "total_amount");
+    /**
+     * 验证支付金额是否正确。
+     *
+     * @param params 包含了所有需要验证的参数
+     * @param order  订单信息
+     */
+    private void validateAmount(Map<String, String> params, OrderInfo order) {
+        String totalAmount = getStringParam(params, "total_amount");
         int totalAmountInt = new BigDecimal(totalAmount).multiply(new BigDecimal("100")).intValue();
         int totalFeeInt = order.getTotalFee().intValue();
         if(totalAmountInt != totalFeeInt){
             throw new AliPayException(ResultCode.CREATE_ORDER_FAIL);
         }
+    }
 
-        // 校验卖家ID
-        String sellerId = checkAndGetStringFromParams(params, "seller_id");
+    /**
+     * 验证销售商ID是否正确。
+     *
+     * @param params 包含了所有需要验证的参数
+     */
+    private void validateSellerId(Map<String, String> params) {
+        String sellerId = getStringParam(params, "seller_id");
         if(!sellerId.equals(config.getSellerId())){
             throw new AliPayException(ResultCode.INSERT_ORDER_FAIL);
         }
+    }
 
-        // 验证应用ID
-        String appId = checkAndGetStringFromParams(params, "app_id");
+    /**
+     * 验证应用ID是否正确。
+     *
+     * @param params 包含了所有需要验证的参数
+     */
+    private void validateAppId(Map<String, String> params) {
+        String appId = getStringParam(params, "app_id");
         if(!appId.equals(config.getAppId())){
             throw new AliPayException(ResultCode.PRODUCT_OR_PAY_TYPE_NULL);
         }
+    }
 
-        // 验证交易状态
-        String tradeStatus = checkAndGetStringFromParams(params, "trade_status");
+    /**
+     * 验证交易状态是否正确。
+     *
+     * @param params 包含了所有需要验证的参数
+     */
+    private void validateTradeStatus(Map<String, String> params) {
+        String tradeStatus = getStringParam(params, "trade_status");
         if(!"TRADE_SUCCESS".equals(tradeStatus)){
             throw new AliPayException(ResultCode.ORDER_PAYING);
         }
-
-        // 所有校验通过，处理相关业务，例如修改订单状态，记录支付日志等
-        processOrder(params, successStatus);
-
-        return null;
     }
+
+    /**
+     * 获取指定键的参数值。
+     *
+     * @param params 包含了所有需要验证的参数
+     * @param key    需要获取值的键
+     * @return       返回对应键的值，如果没有找到则抛出异常
+     */
+    private String getStringParam(Map<String, String> params, String key) {
+        String value = params.get(key);
+        if (value == null) {
+            throw new RuntimeException("Missing required param: " + key);
+        }
+        return value;
+    }
+
 
     /**
      * 将查询参数字符串分割为键值对.
@@ -239,22 +300,6 @@ public class AliPayNative implements IPayMode {
                 URLDecoder.decode(key, StandardCharsets.UTF_8),
                 URLDecoder.decode(value, StandardCharsets.UTF_8)
         );
-    }
-
-    /**
-     * 检查并从参数中获取字符串.
-     *
-     * @param params 参数
-     * @param key 键
-     * @return 值
-     * @throws RuntimeException 如果键对应的值不是字符串类型
-     */
-    private String checkAndGetStringFromParams(Map<String, Object> params, String key) {
-        Object value = params.get(key);
-        if (!(value instanceof String)) {
-            throw new RuntimeException("Unexpected type for '" + key + "': " + value.getClass());
-        }
-        return (String) value;
     }
 
     /**
