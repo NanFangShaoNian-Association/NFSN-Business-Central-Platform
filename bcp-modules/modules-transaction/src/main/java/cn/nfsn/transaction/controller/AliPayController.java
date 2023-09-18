@@ -68,7 +68,7 @@ public class AliPayController {
      */
     @ApiOperation("支付通知")
     @PostMapping("/trade/notify")
-    public String tradeNotify(@RequestParam HttpServletRequest request){
+    public String tradeNotify(HttpServletRequest request){
         // 使用工厂方法创建具体的支付方式实例
         PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
 
