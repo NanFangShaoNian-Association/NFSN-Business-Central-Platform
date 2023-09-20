@@ -93,9 +93,6 @@ public class WxPayNative implements IPayMode {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Object createOrder(ProductDTO productDTO) throws Exception {
-        // 打印日志，开始生成订单
-        log.info("开始生成订单");
-
         //根据商品ID和支付类型创建订单
         OrderInfo orderInfo = orderInfoService.createOrderByProductId(productDTO, PayType.WXPAY.getType());
 
