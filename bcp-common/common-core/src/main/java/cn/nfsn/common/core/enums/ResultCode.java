@@ -36,6 +36,10 @@ public enum ResultCode {
     ACCOUNT_LOGOUT(4003, "账号已注销,请重新注册", HttpStatus.FORBIDDEN),
     PHONE_NUM_REGISTERED(4004, "手机号已注销", HttpStatus.OK),
     REQUEST_ID_NULL(4005, "未能读取到有效 requestId", HttpStatus.BAD_REQUEST),
+    PHONE_NUM_NON_COMPLIANCE(4006, "手机号不符合规范", HttpStatus.BAD_REQUEST),
+    EMAIL_NUM_NON_COMPLIANCE(4007, "邮箱号不符合规范", HttpStatus.BAD_REQUEST),
+    ACCOUNT_EXIST(4008, "账号已存在", HttpStatus.OK),
+    USERINFO_NON_EXIST(4008, "账号信息不存在", HttpStatus.OK),
 
     //重试请求已被处理
     IDEMPOTENCY_ERROR(4006, "请求已处理", HttpStatus.OK),

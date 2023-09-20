@@ -121,7 +121,7 @@ public class TestController {
         // 组织请求参数
         Map<String, Object> map = new HashMap<>();
         map.put("loginId", StpUtil.getLoginId());
-        map.put("appCode",1);
+        map.put("appCode",2);
         // 发起请求
         return SaSsoUtil.getData(map);
     }

@@ -9,6 +9,7 @@ import cn.nfsn.common.core.domain.dto.LoginRequestDTO;
 import cn.nfsn.common.core.enums.ResultCode;
 import cn.nfsn.common.core.exception.UserOperateException;
 import cn.nfsn.common.core.utils.StringUtils;
+import cn.nfsn.common.core.utils.ValidatorUtil;
 import cn.nfsn.common.redis.constant.CacheConstants;
 import cn.nfsn.common.redis.service.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,8 @@ public class EmailCertificateStrategy implements CertificateStrategy {
 
     @Override
     public String getCodeFromRedis(String certificate) {
-        String emailCode = redisCache.getCacheObject(CacheConstants.LOGIN_EMAIL_CODE_KEY+certificate);
+        checkCertificate(certificate);
+        String emailCode = redisCache.getCacheObject(CacheConstants.LOGIN_CODE_KEY+CacheConstants.EMAIL_KEY+certificate);
         if(!StringUtils.hasText(emailCode)){
             //todo log
             throw new UserOperateException(ResultCode.USER_VERIFY_ERROR);
@@ -39,16 +41,25 @@ public class EmailCertificateStrategy implements CertificateStrategy {
 
     @Override
     public AuthCredentials getAuthCredentialsByCertificate(String certificate) {
+        checkCertificate(certificate);
         return remoteUserCredentialsService.getAuthCredentialsByEmail(certificate).getData();
     }
 
     @Override
     public UserInfo getUserInfoByCertificate(LoginRequestDTO loginRequestDTO) {
+        checkCertificate(loginRequestDTO.getCertificate());
         return remoteUserInfoService.getUserInfoByEmail(loginRequestDTO.getCertificate(), loginRequestDTO.getAppCode()).getData();
     }
 
     @Override
     public void createCredentialsByCertificate(String certificate) {
+        checkCertificate(certificate);
         remoteUserCredentialsService.createUserCredentialsByEmail(certificate);
+    }
+
+    private void checkCertificate(String certificate){
+        if(!ValidatorUtil.isEmail(certificate)){
+            throw new UserOperateException(ResultCode.EMAIL_NUM_NON_COMPLIANCE);
+        }
     }
 }

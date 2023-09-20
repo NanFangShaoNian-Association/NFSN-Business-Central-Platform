@@ -36,4 +36,14 @@ public class UserConstants {
      */
     public static final String DEFAULT_HEAD_PICTURE = "classpath:static/text/head_picture_base64";
 
+    /**
+     * 登陆注册功能邮箱验证码前缀
+     */
+    public static final int PREFIX_TYPE_1  = 1;
+
+    /**
+     * 账号绑定功能邮箱验证码前缀
+     */
+    public static final int PREFIX_TYPE_2  = 2;
+
 }

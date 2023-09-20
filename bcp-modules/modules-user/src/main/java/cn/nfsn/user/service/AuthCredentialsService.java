@@ -1,6 +1,7 @@
 package cn.nfsn.user.service;
 
 import cn.nfsn.common.core.domain.AuthCredentials;
+import cn.nfsn.common.core.domain.dto.BindingCertificateDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -18,4 +19,9 @@ public interface AuthCredentialsService extends IService<AuthCredentials> {
     void createUserCredentialsByPhone(String certificate);
 
     void createUserCredentialsByEmail(String certificate);
+
+    void bindingPhoneById(BindingCertificateDTO bindingCertificateDTO);
+
+    void bindingEmailById(BindingCertificateDTO bindingCertificateDTO);
+
 }

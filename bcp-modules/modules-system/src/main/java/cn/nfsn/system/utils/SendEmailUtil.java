@@ -25,7 +25,7 @@ public class SendEmailUtil {
     //根据配置文件中自己的QQ邮箱
     private static final String FROM = "1151214239@qq.com";
 
-    public String loginPrefix = "登录验证码为:";
+    public String loginPrefix = "验证码为:";
 
     public static final String SUFFIX = "，为了您的账号安全，请勿外泄，该验证码5分钟内有效";
 

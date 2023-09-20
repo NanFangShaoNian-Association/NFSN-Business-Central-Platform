@@ -3,7 +3,6 @@ package cn.nfsn.gateway.filter;
 import cn.dev33.satoken.same.SaSameUtil;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -13,7 +12,7 @@ import reactor.core.publisher.Mono;
  * 全局过滤器，为请求添加 Same-Token 
  */
 @Component
-public class ForwardAuthFilter implements GlobalFilter, Ordered {
+public class ForwardAuthFilter implements GlobalFilter{
 
     /**
      * 过滤方法，用于修改请求头信息，向其中添加 Same-Token 参数，并将修改后的请求传递给下一过滤链
@@ -43,8 +42,8 @@ public class ForwardAuthFilter implements GlobalFilter, Ordered {
      *
      * @return 过滤器的优先级
      */
-    @Override
-    public int getOrder() {
-        return -10;
-    }
+//    @Override
+//    public int getOrder() {
+//        return -10;
+//    }
 }

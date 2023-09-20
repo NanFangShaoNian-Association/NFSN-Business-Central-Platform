@@ -30,6 +30,6 @@ public class CodeServiceImpl implements CodeService {
         //发送验证码
         CertificateStrategy strategy = certificateStrategyFactory.getStrategy(CertificateMethodEnum.fromCode(verifyCodeDTO.getIdentity()));
         strategy.sendCodeHandler(account,code,subject);
-        strategy.saveVerificationCodeToRedis(account,code);
+        strategy.saveVerificationCodeToRedis(verifyCodeDTO,code);
     }
 }

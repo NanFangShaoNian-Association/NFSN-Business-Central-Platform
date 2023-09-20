@@ -44,7 +44,7 @@ public class SsoService {
         UserInfo userInfo = certificateStrategy.getUserInfoByCertificate(loginRequestDTO);
         if(Objects.isNull(userInfo)){
             //log.error
-            throw new SystemServiceException(ResultCode.SERVER_BUSY);
+            throw new SystemServiceException(ResultCode.USER_NOT_EXIST_BY_CODE);
         }
         StpUtil.login(userInfo.getCredentialsId());
     }
@@ -85,6 +85,9 @@ public class SsoService {
     public UserInfoVO queryUserInfoByCredentialsId(String credentialsId, String appCode) {
         UserInfo userInfo = remoteUserInfoService.getUserInfoByCredentialsId(appCode, credentialsId).getData();
         UserInfoVO userInfoVO = new UserInfoVO();
+        if(Objects.isNull(userInfo)){
+            throw new SystemServiceException(ResultCode.USERINFO_NON_EXIST);
+        }
         BeanUtils.copyProperties(userInfo,userInfoVO);
         return userInfoVO;
     }

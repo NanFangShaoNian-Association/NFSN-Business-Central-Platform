@@ -52,8 +52,27 @@ public class CacheConstants {
      */
     public static final String LOCK_KEY = "lock:";
 
-    public static final String LOGIN_EMAIL_CODE_KEY = "login:code:email:";
-    public static final String LOGIN_PHONE_CODE_KEY = "login:code:phone:";
+    /**
+     * 登陆注册验证码前缀
+     */
+    public static final String LOGIN_CODE_KEY = "login:code:";
+
+
+    /**
+     * 绑定验证码前缀
+     */
+    public static final String BINDING_CODE_KEY = "binding:code:";
+
+    /**
+     * 邮箱号前缀
+     */
+    public static final String EMAIL_KEY = "email:";
+
+    /**
+     * 手机号前缀
+     */
+    public static final String PHONE_KEY = "phone:";
+
     //验证码失效时间15分钟
     public static final Integer MESSAGE_CODE_TIME_OUT = 999999;
 
