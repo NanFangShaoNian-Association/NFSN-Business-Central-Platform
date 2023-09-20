@@ -2,14 +2,20 @@ package cn.nfsn.transaction.controller;
 
 import cn.nfsn.common.core.domain.R;
 import cn.nfsn.transaction.bridge.PayBridge;
+import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
+import cn.nfsn.transaction.model.dto.CancelOrderDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
+import cn.nfsn.transaction.model.dto.RefundDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 /**
  * @ClassName: AliPayController
@@ -27,34 +33,87 @@ public class AliPayController {
     @Resource
     private PayFactory payFactory;
 
+    private PayBridge aliPayNative;
+
     /**
-     * 统一收单下单并支付页面接口的调用
+     * 使用@PostConstruct注解来初始化aliPayNative
+     */
+    @PostConstruct
+    public void init() {
+        this.aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+    }
+
+    /**
+     * 统一收单下单并支付页面
      *
      * @param productDTO 商品信息
      * @return 返回结果
      */
-    @ApiOperation("统一收单下单并支付页面接口的调用")
+    @ApiOperation("统一收单下单并支付页面")
     @PostMapping("/trade/page/pay")
-    public R tradePagePay(@RequestBody ProductDTO productDTO) throws Exception {
-        log.info("统一收单下单并支付页面接口的调用");
-        // 使用工厂方法创建具体的支付方式实例
-        PayBridge aliPayNative = payFactory.createPay(PayFactory.ALI_PAY_NATIVE);
+    public R tradePagePay(@RequestBody @Valid ProductDTO productDTO) throws Exception {
 
-        // 保存创建订单的结果
-        Object result = null;
+        log.info("统一收单下单并支付页面接口的被调用");
 
-        // 如果支付方式实例创建成功，调用其创建订单的方法
-        if (aliPayNative != null) {
-            result = aliPayNative.createOrder(productDTO);
-        }
+        Object result = aliPayNative.createOrder(productDTO);
 
-        // 判断返回的结果类型并进行相应的处理
         if (result instanceof String) {
-            //将form表单字符串返回给前端程序，之后前端将会调用自动提交脚本，进行表单的提交
-            //此时，表单会自动提交到action属性所指向的支付宝开放平台中，从而为用户展示一个支付页面
             return R.ok((String) result);
         } else {
             throw new RuntimeException("Unexpected result type: " + result.getClass().getName());
         }
     }
+
+    /**
+     * 处理支付通知接口，用于处理支付宝的异步通知
+     *
+     * @param request 请求参数，包含支付宝异步通知中的全部信息
+     * @return 处理结果，成功返回"success"，失败返回"failure"
+     */
+    @ApiOperation("支付通知处理")
+    @PostMapping("/trade/notify")
+    public String tradeNotify(HttpServletRequest request){
+
+        log.info("支付通知接口被调用");
+
+        try {
+            aliPayNative.handlePaymentNotification(request, OrderStatus.NOTPAY);
+            return "success";
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return "failure";
+        }
+    }
+
+    /**
+     * 取消订单
+     *
+     * @param cancelOrderDTO 请求参数，包含订单编号
+     * @return R 返回结果
+     */
+    @ApiOperation("取消订单")
+    @PostMapping("/trade/close")
+    public R cancel(@RequestBody @Valid CancelOrderDTO cancelOrderDTO) throws Exception {
+
+        log.info("取消订单接口被调用");
+
+        aliPayNative.cancelOrder(cancelOrderDTO.getOrderNo());
+        return R.ok();
+    }
+
+    /**
+     * 退款
+     *
+     * @param refundDTO 请求参数，包含订单编号和退款原因
+     * @return R 返回结果
+     */
+    @ApiOperation("退款")
+    @PostMapping("/trade/refund")
+    public R refunds(@RequestBody @Valid RefundDTO refundDTO) throws Exception {
+        log.info("退款接口被调用");
+
+        aliPayNative.refund(refundDTO.getOrderNo(), refundDTO.getReason());
+        return R.ok();
+    }
+
 }

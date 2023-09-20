@@ -5,7 +5,7 @@ import cn.nfsn.transaction.bridge.PayBridge;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
 import cn.nfsn.transaction.model.dto.ProductDTO;
-import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
+import cn.nfsn.transaction.model.dto.ResponsePayNotifyDTO;
 import cn.nfsn.transaction.service.OrderInfoService;
 import com.google.gson.Gson;
 import io.swagger.annotations.Api;
@@ -112,7 +112,7 @@ public class WxPayController {
         Gson gson = new Gson();
         try {
             // 调用拿到的实例进行处理
-            ResponseWxPayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.SUCCESS);
+            ResponsePayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.SUCCESS);
 
             // 根据返回结果设置响应状态，并返回相应消息
             if (SUCCESS_CODE.equals(result.getCode())) {
@@ -126,7 +126,7 @@ public class WxPayController {
             // 如果处理过程中出现异常，打印异常堆栈，设置响应状态码为 500，并返回错误消息
             e.printStackTrace();
             response.setStatus(500);
-            return gson.toJson(new ResponseWxPayNotifyDTO(ERROR_CODE, ERROR_MSG));
+            return gson.toJson(new ResponsePayNotifyDTO(ERROR_CODE, ERROR_MSG));
         }
 
     }
@@ -181,8 +181,11 @@ public class WxPayController {
 
     /**
      * 退款结果通知接口
-     *
      * 当退款状态发生改变后，微信会把相关退款结果发送给商户。商户需要实现此接口以获取这些通知。
+     *
+     * @param request  HTTP 请求对象
+     * @param response HTTP 响应对象
+     * @return 返回响应消息的 JSON 字符串
      */
     @ApiOperation("退款结果通知")
     @PostMapping("/refunds/notify")
@@ -195,7 +198,7 @@ public class WxPayController {
 
         try {
             // 调用拿到的实例进行处理
-            ResponseWxPayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.REFUND_SUCCESS);
+            ResponsePayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.REFUND_SUCCESS);
 
             // 判断返回结果
             if (result.getCode().equals(SUCCESS_CODE)) {
@@ -212,7 +215,7 @@ public class WxPayController {
             // 出现异常时打印错误堆栈，并返回错误信息
             e.printStackTrace();
             response.setStatus(500);
-            return new Gson().toJson(new ResponseWxPayNotifyDTO("ERROR", "失败"));
+            return new Gson().toJson(new ResponsePayNotifyDTO("ERROR", "失败"));
         }
     }
 

@@ -2,7 +2,7 @@ package cn.nfsn.transaction.bridge;
 
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.model.dto.ProductDTO;
-import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
+import cn.nfsn.transaction.model.dto.ResponsePayNotifyDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,16 +27,16 @@ public interface IPayMode {
    Object createOrder(ProductDTO productDTO) throws Exception;
 
    /**
-    * 处理微信支付通知，验证请求的有效性，并进行订单处理.
+    * 处理支付通知，验证请求的有效性，并进行订单处理.
     *
     * @param request HttpServletRequest 对象，表示一个 HTTP 请求
-    * @return ResponseWxPayNotifyDTO    响应对象，包含响应码和信息
+    * @return ResponsePayNotifyDTO    响应对象，包含响应码和信息
     * @throws IOException               如果读取请求数据时出错
     * @throws GeneralSecurityException  如果在验证签名过程中出现安全异常
     */
-   ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException;
+   ResponsePayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException;
 
-   /**
+    /**
     * 处理订单
     *
     * @param bodyMap                   请求体Map
@@ -66,7 +66,7 @@ public interface IPayMode {
     /**
      * 处理退款单
      *
-     * @param bodyMap 请求体Map，包含了微信通知的退款信息
+     * @param bodyMap 请求体Map，包含了退款信息
      * @successStatus 成功状态
      * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
      */

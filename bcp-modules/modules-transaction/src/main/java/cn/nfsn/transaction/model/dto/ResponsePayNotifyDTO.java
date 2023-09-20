@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResponseWxPayNotifyDTO {
+public class ResponsePayNotifyDTO {
     /**
      * 响应的状态码
      */

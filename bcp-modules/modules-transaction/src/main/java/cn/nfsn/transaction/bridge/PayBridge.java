@@ -2,7 +2,7 @@ package cn.nfsn.transaction.bridge;
 
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.model.dto.ProductDTO;
-import cn.nfsn.transaction.model.dto.ResponseWxPayNotifyDTO;
+import cn.nfsn.transaction.model.dto.ResponsePayNotifyDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +28,7 @@ public abstract class PayBridge {
      * 创建订单，调用Native支付接口
      *
      * @param productDTO 商品信息
-     * @return 包含code_url 和 订单号的Map
+     * @return 包含微信支付的订单二维码链接或者支付宝支付的HTML表单和订单号的Map
      * @throws Exception 抛出异常
      */
     public abstract Object createOrder(ProductDTO productDTO) throws Exception;
@@ -43,14 +43,14 @@ public abstract class PayBridge {
     public abstract void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException;
 
     /**
-     * 处理微信支付通知，验证请求的有效性，并进行订单处理.
+     * 处理支付通知，验证请求的有效性，并进行订单处理.
      *
      * @param request HttpServletRequest 对象，表示一个 HTTP 请求
-     * @return ResponseWxPayNotifyDTO 响应对象，包含响应码和信息
+     * @return ResponsePayNotifyDTO 响应对象，包含响应码和信息
      * @throws IOException              如果读取请求数据时出错
      * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
      */
-    public ResponseWxPayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+    public ResponsePayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
         return payMode.handlePaymentNotification(request, successStatus);
     }
 
@@ -75,7 +75,7 @@ public abstract class PayBridge {
     /**
      * 处理退款单
      *
-     * @param bodyMap 请求体Map，包含了微信通知的退款信息
+     * @param bodyMap 请求体Map，包含了退款信息
      * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
      */
     public abstract void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception;

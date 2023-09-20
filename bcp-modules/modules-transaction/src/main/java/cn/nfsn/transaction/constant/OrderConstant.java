@@ -57,7 +57,7 @@ public class OrderConstant {
     /**
      * order_info表的二维码url字段名
      */
-    public static final String CODE_URL = "code_url";
+    public static final String PAYMENT_DATA = "payment_data";
 
     /**
      * 订单号前缀

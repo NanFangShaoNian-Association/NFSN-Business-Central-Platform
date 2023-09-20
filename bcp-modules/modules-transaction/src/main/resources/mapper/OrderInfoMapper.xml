@@ -11,7 +11,7 @@
 		<result property="userId" column="user_id" jdbcType="BIGINT"/>
 		<result property="productId" column="product_id" jdbcType="BIGINT"/>
 		<result property="totalFee" column="total_fee" jdbcType="INTEGER"/>
-		<result property="codeUrl" column="code_url" jdbcType="VARCHAR"/>
+		<result property="paymentData" column="payment_data" jdbcType="VARCHAR"/>
 		<result property="orderStatus" column="order_status" jdbcType="VARCHAR"/>
 		<result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
 		<result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
@@ -23,7 +23,7 @@
 
 	<sql id="Base_Column_List">
 		id, title, order_no, user_id, product_id, total_fee,
-        code_url, order_status, create_time, update_time,
+        payment_data, order_status, create_time, update_time,
         payment_type, app_id, payment_notify_url, refund_notify_url
 	</sql>
 </mapper>
