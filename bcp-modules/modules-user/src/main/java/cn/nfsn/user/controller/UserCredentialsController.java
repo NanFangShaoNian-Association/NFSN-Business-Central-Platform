@@ -3,8 +3,10 @@ package cn.nfsn.user.controller;
 import cn.nfsn.api.user.RemoteUserCredentialsService;
 import cn.nfsn.common.core.domain.AuthCredentials;
 import cn.nfsn.common.core.domain.R;
+import cn.nfsn.common.core.domain.dto.BindingCertificateDTO;
 import cn.nfsn.user.service.AuthCredentialsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -39,6 +41,18 @@ public class UserCredentialsController implements RemoteUserCredentialsService {
     @RequestMapping(method = RequestMethod.POST,value = "/email")
     public R createUserCredentialsByEmail(@RequestBody String certificate){
         authCredentialsService.createUserCredentialsByEmail(certificate);
+        return R.ok();
+    }
+
+    @RequestMapping(method = RequestMethod.POST,value = "/phone/binding")
+    public R bindingPhoneById(@Validated @RequestBody BindingCertificateDTO bindingCertificateDTO){
+        authCredentialsService.bindingPhoneById(bindingCertificateDTO);
+        return R.ok();
+    }
+
+    @RequestMapping(method = RequestMethod.POST,value = "/email/binding")
+    public R bindingEmailById(@Validated @RequestBody BindingCertificateDTO bindingCertificateDTO){
+        authCredentialsService.bindingEmailById(bindingCertificateDTO);
         return R.ok();
     }
 }

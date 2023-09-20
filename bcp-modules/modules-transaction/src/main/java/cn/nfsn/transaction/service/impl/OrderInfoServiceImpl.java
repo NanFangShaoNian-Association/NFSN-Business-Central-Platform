@@ -172,7 +172,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             // 使用UpdateWrapper仅更新codeUrl字段
             UpdateWrapper<OrderInfo> updateWrapper = new UpdateWrapper<>();
 
-            updateWrapper.eq(ORDER_NO, orderNo).set(CODE_URL, codeUrl);
+            updateWrapper.eq(ORDER_NO, orderNo).set(PAYMENT_DATA, codeUrl);
 
             // 执行更新操作，并验证结果
             int rowsAffected = baseMapper.update(null, updateWrapper);

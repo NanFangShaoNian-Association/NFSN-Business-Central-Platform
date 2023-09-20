@@ -7,21 +7,19 @@ import cn.nfsn.common.core.exception.RedisException;
 import cn.nfsn.common.core.exception.SystemServiceException;
 import cn.nfsn.common.core.exception.UserOperateException;
 import cn.nfsn.common.core.exception.WxPayException;
-import cn.nfsn.common.core.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
@@ -44,8 +42,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = SystemServiceException.class)
     @ResponseBody
     public R serviceExceptionHandler(SystemServiceException e){
-//        log.error("抛出业务错误!：{}",e.getMessage());
-        e.printStackTrace();
+        log.error("抛出业务错误!：{}",e.getMessage());
         return R.fail(e.getResultCode());
     }
 
@@ -57,8 +54,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = UserOperateException.class)
     @ResponseBody
     public R userOperateExceptionHandler(UserOperateException e){
-//        log.error("用户操作错误!：{}",e.getMessage());
-        e.printStackTrace();
+        log.error("用户操作错误!：{}",e.getMessage());
         return R.fail(e.getResultCode());
     }
 
@@ -150,8 +146,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value =NullPointerException.class)
     @ResponseBody
     public R exceptionHandler(NullPointerException e){
-//        log.error("抛出空指针错误!:{}",e.getMessage());
-        e.printStackTrace();
+        log.error("抛出空指针错误!:{}",e.getMessage());
         return R.fail(ResultCode.INTERNAL_ERROR);
     }
 
@@ -167,7 +162,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotPermissionException.class)
     @ResponseBody
     public R handlerException(NotPermissionException e) {
-        e.printStackTrace();
         return R.ok("缺少权限：" + e.getPermission());
     }
 
@@ -175,7 +169,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotRoleException.class)
     @ResponseBody
     public R handlerException(NotRoleException e) {
-        e.printStackTrace();
         return R.ok("缺少角色：" + e.getRole());
     }
 
@@ -183,7 +176,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotSafeException.class)
     @ResponseBody
     public R handlerException(NotSafeException e) {
-        e.printStackTrace();
         return R.ok("二级认证校验失败：" + e.getService());
     }
 
@@ -191,7 +183,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisableServiceException.class)
     @ResponseBody
     public R handlerException(DisableServiceException e) {
-        e.printStackTrace();
         return R.ok("当前账号 " + e.getService() + " 服务已被封禁 (level=" + e.getLevel() + ")：" + e.getDisableTime() + "秒后解封");
     }
 
@@ -199,7 +190,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotBasicAuthException.class)
     @ResponseBody
     public R handlerException(NotBasicAuthException e) {
-        e.printStackTrace();
         return R.ok(e.getMessage());
     }
 
@@ -211,8 +201,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value =Exception.class)
     @ResponseBody
     public R exceptionHandler(Exception e){
-        //log
-        e.printStackTrace();
+        log.error("出现Exception异常：", e);
         return R.fail(ResultCode.INTERNAL_ERROR);
     }
 }

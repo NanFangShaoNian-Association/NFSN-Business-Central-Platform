@@ -21,7 +21,7 @@ public class MessageCodeController {
     @Autowired
     private CodeService codeService;
     @PostMapping
-    public R getCodeByAccount(@RequestBody @Validated VerifyCodeDTO verifyCodeDTO){
+    public R sendCodeByAccount(@RequestBody @Validated VerifyCodeDTO verifyCodeDTO){
         codeService.sendCode(verifyCodeDTO);
         return R.ok();
     }

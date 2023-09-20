@@ -47,8 +47,8 @@
                     <artifactId>sa-token-spring-boot-starter</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>cn.nfsn</groupId>
-                    <artifactId>common-core</artifactId>
+                    <groupId>com.baomidou</groupId>
+                    <artifactId>mybatis-plus-boot-starter</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -61,6 +61,14 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+
+        <!--        临时解决Mac 报错-->
+        <!--        Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider-->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.75.Final</version>
         </dependency>
     </dependencies>
 

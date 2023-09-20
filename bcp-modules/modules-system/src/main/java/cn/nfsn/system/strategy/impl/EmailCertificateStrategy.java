@@ -1,5 +1,9 @@
 package cn.nfsn.system.strategy.impl;
 
+import cn.nfsn.common.core.domain.dto.VerifyCodeDTO;
+import cn.nfsn.common.core.enums.ResultCode;
+import cn.nfsn.common.core.exception.UserOperateException;
+import cn.nfsn.common.core.utils.ValidatorUtil;
 import cn.nfsn.common.redis.constant.CacheConstants;
 import cn.nfsn.common.redis.service.RedisCache;
 import cn.nfsn.system.strategy.CertificateStrategy;
@@ -22,12 +26,20 @@ public class EmailCertificateStrategy implements CertificateStrategy {
 
     @Override
     public void sendCodeHandler(String account, String code,String subject) {
+        checkCertificate(account);
         sendEmailUtil.sendSimpleMail(account,subject,code);
     }
 
     @Override
-    public void saveVerificationCodeToRedis(String account, String code) {
-        redisCache.setCacheObject(CacheConstants.LOGIN_EMAIL_CODE_KEY+account,code,CacheConstants.MESSAGE_CODE_TIME_OUT, TimeUnit.MINUTES);
+    public void saveVerificationCodeToRedis(VerifyCodeDTO verifyCodeDTO,String code) {
+        String prefix = CertificateStrategy.getPrefixByType(verifyCodeDTO.getFunctionType());
+        checkCertificate(verifyCodeDTO.getAccount());
+        redisCache.setCacheObject(prefix+CacheConstants.EMAIL_KEY+verifyCodeDTO.getAccount(),code,CacheConstants.MESSAGE_CODE_TIME_OUT, TimeUnit.MINUTES);
+    }
+    private void checkCertificate(String certificate){
+        if(!ValidatorUtil.isEmail(certificate)){
+            throw new UserOperateException(ResultCode.EMAIL_NUM_NON_COMPLIANCE);
+        }
     }
 
 }

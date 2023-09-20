@@ -14,10 +14,9 @@ public class LoginRequestDTO implements Serializable {
     /**
      * 凭证-手机号登录凭证为手机号码，微信和QQ则为对应的凭据
      */
-    @ApiModelProperty("账号")
+    @ApiModelProperty("邮箱或手机账号")
     @NotNull(message = "账号不能为空")
     @NotBlank(message = "账号不能为空")
-//    @ApiModelProperty("凭证-手机号登录凭证为手机号码，微信和QQ则为对应的凭据")
     private String certificate;
 
     /**

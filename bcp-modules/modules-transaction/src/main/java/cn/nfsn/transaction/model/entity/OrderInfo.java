@@ -50,9 +50,9 @@ public class OrderInfo implements Serializable {
     private Integer totalFee;
 
     /**
-     * 订单二维码链接
+     * 微信支付的订单二维码链接或者支付宝支付的HTML表单
      */
-    private String codeUrl;
+    private String paymentData;
 
     /**
      * 订单状态

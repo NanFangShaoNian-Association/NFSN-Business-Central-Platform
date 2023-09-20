@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,6 +75,48 @@ public class PaymentInfoServiceImpl extends ServiceImpl<PaymentInfoMapper, Payme
         log.info("微信支付日志记录结束");
     }
 
+    /**
+     * 记录支付日志：支付宝
+     *
+     * @param params 支付相关参数，包括订单号、业务编号、交易状态、交易金额等信息
+     */
+    @Override
+    public void createPaymentInfoForAliPay(Map<String, String> params) {
+
+        log.info("记录支付日志");
+
+        // 获取订单号
+        String orderNo = params.get("out_trade_no");
+
+        // 业务编号
+        String transactionId = params.get("trade_no");
+
+        // 交易状态
+        String tradeStatus = params.get("trade_status");
+
+        // 交易金额
+        String totalAmount = params.get("total_amount");
+        // 将交易金额从字符串转换为整数，并乘以100（单位由元转换为分）
+        int totalAmountInt = new BigDecimal(totalAmount).multiply(new BigDecimal("100")).intValue();
+
+        // 初始化支付信息对象
+        PaymentInfo paymentInfo = new PaymentInfo();
+        paymentInfo.setOrderNo(orderNo);
+        paymentInfo.setPaymentType(PayType.ALIPAY.getType());
+        paymentInfo.setTransactionId(transactionId);
+        paymentInfo.setTradeType("电脑网站支付");
+        paymentInfo.setTradeState(tradeStatus);
+        paymentInfo.setPayerTotal(totalAmountInt);
+
+        // 使用Gson将支付参数Map转化为json格式
+        Gson gson = new Gson();
+        String json = gson.toJson(params, HashMap.class);
+        // 设置支付信息内容
+        paymentInfo.setContent(json);
+
+        // 插入支付信息到数据库
+        baseMapper.insert(paymentInfo);
+    }
 
 }
 

@@ -29,7 +29,7 @@ public class AliPay extends PayBridge {
     * 创建订单，调用Native支付接口
     *
     * @param productDTO 商品信息
-    * @return 包含code_url 和 订单号的Map
+    * @return 包含支付表单代码和订单号的Map
     * @throws Exception 抛出异常
     */
    @Override
@@ -74,7 +74,7 @@ public class AliPay extends PayBridge {
    /**
     * 处理退款单
     *
-    * @param bodyMap 请求体Map，包含了微信通知的退款信息
+    * @param bodyMap 请求体Map，包含了支付宝通知的退款信息
     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
     */
     @Override

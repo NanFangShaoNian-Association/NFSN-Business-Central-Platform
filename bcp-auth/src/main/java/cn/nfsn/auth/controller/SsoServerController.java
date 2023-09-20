@@ -22,18 +22,19 @@ import java.io.IOException;
  */
 @Api("认证模块")
 @RestController
+@RequestMapping("/sso")
 public class SsoServerController {
     @Autowired
     private SsoService ssoService;
 
     @ApiIgnore
-    @RequestMapping("/sso/*")
+    @RequestMapping("/*")
     public Object ssoRequest() {
         return SaSsoProcessor.instance.serverDister();
     }
 
     @ApiOperation("单点登陆接口")
-    @PostMapping("/sso/doLogin")
+    @RequestMapping(method = RequestMethod.POST,value = "/doLogin")
     public SaResult ssoLogin(@Validated @RequestBody LoginRequestDTO loginRequestDTO) throws IOException {
         ssoService.SsoLoginByCodeHandler(loginRequestDTO);
         return SaResult.ok().setData(StpUtil.getTokenValue());
@@ -41,7 +42,7 @@ public class SsoServerController {
 
     // 示例：获取数据接口（用于在模式三下，为 client 端开放拉取数据的接口）
     @ApiOperation("根据密钥解析的ID获取用户信息接口")
-    @RequestMapping(value = "/sso/getData",method = RequestMethod.GET)
+    @RequestMapping(value = "/getData",method = RequestMethod.GET)
     public SaResult getData(@ApiParam("密钥解析的ID")String loginId, @ApiParam("应用ID")String appCode) {
         // 校验签名：只有拥有正确秘钥发起的请求才能通过校验
         SaSignUtil.checkRequest(SaHolder.getRequest());
@@ -50,23 +51,29 @@ public class SsoServerController {
 
     // SSO-Server：单点注销
     @ApiOperation("请求头携带密钥进行单点注销接口")
-    @RequestMapping(value = "/sso/signout",method = RequestMethod.GET)
+    @RequestMapping(value = "/signout",method = RequestMethod.GET)
     public Object ssoSignout() {
         return SaSsoProcessor.instance.ssoSignout();
     }
 
     // SSO-Server：校验ticket 获取账号id
     @ApiIgnore
-    @RequestMapping("/sso/checkTicket")
+    @RequestMapping("/checkTicket")
     public Object ssoCheckTicket() {
         return SaSsoProcessor.instance.ssoCheckTicket();
     }
 
     // SSO-Server：统一认证地址
     @ApiIgnore
-    @RequestMapping("/sso/auth")
+    @RequestMapping("/auth")
     public Object ssoAuth() {
         return SaSsoProcessor.instance.ssoAuth();
+    }
+
+    // 当前是否登录
+    @RequestMapping(method = RequestMethod.GET,value = "/isLogin")
+    public Object isLogin() {
+        return SaResult.data(StpUtil.isLogin());
     }
 
 }
