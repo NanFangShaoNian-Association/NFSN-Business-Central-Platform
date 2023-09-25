@@ -21,6 +21,7 @@
         <module>common-MinIO</module>
         <module>common-rocketMQ</module>
         <module>common-service-aop</module>
+        <module>common-rabbitmq</module>
     </modules>
 
     <properties>

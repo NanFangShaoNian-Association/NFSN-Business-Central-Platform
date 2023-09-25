@@ -97,6 +97,10 @@
             <groupId>cn.nfsn</groupId>
             <artifactId>common-redis</artifactId>
         </dependency>
+        <dependency>
+            <groupId>cn.nfsn</groupId>
+            <artifactId>common-rabbitmq</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
