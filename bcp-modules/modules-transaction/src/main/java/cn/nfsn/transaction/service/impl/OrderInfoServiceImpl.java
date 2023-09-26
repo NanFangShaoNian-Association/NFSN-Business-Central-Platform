@@ -15,6 +15,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -23,6 +24,8 @@ import javax.annotation.Resource;
 
 import static cn.nfsn.common.core.enums.ResultCode.*;
 import static cn.nfsn.transaction.constant.OrderConstant.*;
+import static cn.nfsn.transaction.constant.RabbitConstant.ORDER_CLOSE_DELAY_ROUTING_KEY;
+import static cn.nfsn.transaction.constant.RabbitConstant.ORDER_EXCHANGE;
 
 
 /**
@@ -41,6 +44,10 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
 
     @Resource
     private RedissonClient redissonClient;
+
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
 
     /**
      * 创建订单
@@ -112,10 +119,14 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
                     throw new WxPayException(INSERT_ORDER_FAIL);
                 }
 
-                //TODO: 使用MQ设置订单超时时间，如果30分钟内，订单状态没有变成OrderStatus.SUCCESS，则30分钟超时后将订单状态设置为OrderStatus.CLOSED
-
-                log.info("订单创建成功，订单号：{}", orderInfo.getOrderNo());
-
+                // 使用MQ设置订单超时时间，如果30分钟内，订单状态没有变成OrderStatus.SUCCESS，则30分钟超时后将订单状态设置为OrderStatus.CLOSED
+                // 发送延迟消息到RabbitMQ
+                rabbitTemplate.convertAndSend(
+                        ORDER_EXCHANGE,
+                        ORDER_CLOSE_DELAY_ROUTING_KEY,
+                        orderInfo.getOrderNo()
+                );
+                log.info("订单创建成功，并已发送延迟消息，订单号：{}", orderInfo.getOrderNo());
             } finally {
                 // 判断当前线程是否持有锁
                 if (lock.isHeldByCurrentThread()) {
@@ -204,7 +215,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         OrderInfo orderInfo = baseMapper.selectOne(queryWrapper);
 
         // 判断查询结果是否为空
-        if(orderInfo == null){
+        if (orderInfo == null) {
             return null;
         }
 
