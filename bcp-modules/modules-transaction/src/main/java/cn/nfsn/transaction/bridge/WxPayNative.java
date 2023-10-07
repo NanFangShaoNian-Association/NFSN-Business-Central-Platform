@@ -2,9 +2,11 @@ package cn.nfsn.transaction.bridge;
 
 import cn.nfsn.common.core.utils.ImprovedHttpClientUtil;
 import cn.nfsn.transaction.config.WxPayConfig;
-import cn.nfsn.transaction.enums.*;
+import cn.nfsn.transaction.enums.OrderStatus;
+import cn.nfsn.transaction.enums.PayType;
+import cn.nfsn.transaction.enums.WxApiType;
+import cn.nfsn.transaction.enums.WxNotifyType;
 import cn.nfsn.transaction.factory.PayFactory;
-import cn.nfsn.transaction.mapper.RefundInfoMapper;
 import cn.nfsn.transaction.model.dto.AmountDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.RequestWxCodeDTO;
@@ -15,16 +17,11 @@ import cn.nfsn.transaction.service.OrderInfoService;
 import cn.nfsn.transaction.service.PaymentInfoService;
 import cn.nfsn.transaction.service.RefundInfoService;
 import cn.nfsn.transaction.utils.WechatPay2ValidatorForRequest;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.gson.Gson;
 import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,14 +31,12 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static cn.nfsn.transaction.constant.WxPayConstant.*;
+import static cn.nfsn.transaction.utils.WxPayUtils.sendRequest;
 
 /**
  * @ClassName: WxPayStrategy
@@ -52,36 +47,25 @@ import static cn.nfsn.transaction.constant.WxPayConstant.*;
 @Slf4j
 @Component
 public class WxPayNative implements IPayMode {
-    private final Gson gson = new Gson();
-
-    @Resource
-    private OrderInfoService orderInfoService;
-
-    @Resource
-    private WxPayConfig wxPayConfig;
-
-    @Resource
-    private CloseableHttpClient wxPayClient;
-
-    @Resource
-    private PaymentInfoService paymentInfoService;
-
-    @Resource
-    private Verifier verifier;
-
-    @Resource
-    private PayFactory payFactory;
-
-    @Resource
-    private RefundInfoMapper refundInfoMapper;
-
-    @Resource
-    private RefundInfoService refundInfoService;
 
     /**
      * 重入锁，用于处理并发问题
      */
     private final ReentrantLock lock = new ReentrantLock();
+    @Resource
+    private OrderInfoService orderInfoService;
+    @Resource
+    private WxPayConfig wxPayConfig;
+    @Resource
+    private CloseableHttpClient wxPayClient;
+    @Resource
+    private PaymentInfoService paymentInfoService;
+    @Resource
+    private Verifier verifier;
+    @Resource
+    private PayFactory payFactory;
+    @Resource
+    private RefundInfoService refundInfoService;
 
     /**
      * 创建订单，调用Native支付接口
@@ -130,7 +114,7 @@ public class WxPayNative implements IPayMode {
                 .amount(amountDTO)
                 .build();
 
-        Map<String, String> resultMap = sendRequest(url, requestWxCodeDTO, "Native下单");
+        Map<String, String> resultMap = sendRequest(wxPayClient, url, requestWxCodeDTO, "Native下单");
 
         //从结果中获取二维码URL
         codeUrl = resultMap.get("code_url");
@@ -165,64 +149,6 @@ public class WxPayNative implements IPayMode {
     }
 
     /**
-     * 发送请求并获取响应结果
-     *
-     * @param url         请求的URL
-     * @param requestData 请求参数集合
-     * @param logInfo     日志信息
-     * @return 响应结果映射
-     * @throws IOException 如果请求失败，抛出异常
-     */
-    private Map<String, String> sendRequest(String url, Object requestData, String logInfo) throws IOException {
-
-        // 创建POST请求
-        HttpPost httpPost = new HttpPost(url);
-
-        // 将请求参数转换为JSON格式
-        String jsonParams = gson.toJson(requestData);
-
-        // 打印请求参数信息
-        log.info("请求参数 ===> {}", jsonParams);
-
-        // 创建字符串实体，设置编码格式和内容类型
-        StringEntity entity = new StringEntity(jsonParams, UTF8);
-        entity.setContentType(APP_JSON);
-
-        // 设置请求实体和头部信息
-        httpPost.setEntity(entity);
-        httpPost.setHeader(ACCEPT, APP_JSON);
-
-        // 发送请求并获取响应
-        try (CloseableHttpResponse response = wxPayClient.execute(httpPost)) {
-            // 响应状态码
-            int statusCode = response.getStatusLine().getStatusCode();
-
-            // 获取响应内容和状态码
-            // 响应体
-            String bodyAsString = "";
-            if (entity != null && !logInfo.equals(CLOSE_ORDER)) {
-                // 获取响应内容
-                bodyAsString = EntityUtils.toString(response.getEntity());
-            }
-
-            // 根据状态码处理响应结果
-            if (statusCode == 200) {
-                log.info("成功, 返回结果 = {}", bodyAsString);
-            } else if (statusCode == 204) {
-                log.info("成功");
-            } else {
-                log.info("{}失败,响应码 = {},返回结果 = {}", logInfo, statusCode, bodyAsString);
-                throw new IOException("request failed");
-            }
-
-            // 解析响应结果并返回
-            Map<String, String> resultMap = gson.fromJson(bodyAsString, HashMap.class);
-
-            return resultMap;
-        }
-    }
-
-    /**
      * 处理微信支付通知，验证请求的有效性，并进行订单处理.
      *
      * @param request HttpServletRequest 对象，表示一个 HTTP 请求
@@ -231,7 +157,7 @@ public class WxPayNative implements IPayMode {
      * @throws GeneralSecurityException 如果在验证签名过程中出现安全异常
      */
     @Override
-    public ResponsePayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+    public ResponsePayNotifyDTO paymentNotificationHandler(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
 
         // 实例化 Gson 对象，用于 JSON 数据解析
         Gson gson = new Gson();
@@ -261,10 +187,10 @@ public class WxPayNative implements IPayMode {
         log.info("通知验签成功");
 
         // 创建支付桥接对象，用于处理具体的支付逻辑
-        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+        AbstractPay wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         // 使用桥接对象处理订单
-        wxPayNative.processOrder(bodyMap, successStatus);
+        processOrder(bodyMap, successStatus);
 
         // 处理完成，返回成功消息
         return new ResponsePayNotifyDTO(SUCCESS_CODE, SUCCESS_MSG);
@@ -275,11 +201,10 @@ public class WxPayNative implements IPayMode {
      * 处理订单
      *
      * @param bodyMap 请求体Map
-     * @successStatus 成功状态
      * @throws GeneralSecurityException 抛出安全异常
+     * @successStatus 成功状态
      */
     @Transactional(rollbackFor = Exception.class)
-    @Override
     public void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException {
         log.info("处理订单");
 
@@ -289,29 +214,29 @@ public class WxPayNative implements IPayMode {
         // 将明文转换成map
         Gson gson = new Gson();
         HashMap plainTextMap = gson.fromJson(plainText, HashMap.class);
-        String orderNo = (String)plainTextMap.get("out_trade_no");
+        String orderNo = (String) plainTextMap.get("out_trade_no");
 
         // 在对业务数据进行状态检查和处理之前，
         // 要采用数据锁进行并发控制，
         // 以避免函数重入造成的数据混乱
-        if(lock.tryLock()){
+        if (lock.tryLock()) {
             try {
                 // 处理重复的通知
                 // 接口调用的幂等性：无论接口被调用多少次，产生的结果是一致的
                 String orderStatus = orderInfoService.getOrderStatus(orderNo);
-                if(!OrderStatus.NOTPAY.getType().equals(orderStatus) && !OrderStatus.REFUND_PROCESSING.getType().equals(orderStatus)){
+                if (!OrderStatus.NOTPAY.getType().equals(orderStatus) && !OrderStatus.REFUND_PROCESSING.getType().equals(orderStatus)) {
                     return;
                 }
 
                 // 更新订单状态
                 orderInfoService.updateStatusByOrderNo(orderNo, successStatus);
 
-                if(OrderStatus.NOTPAY.getType().equals(orderStatus)){
+                if (OrderStatus.NOTPAY.getType().equals(orderStatus)) {
                     // 记录支付日志
                     paymentInfoService.createPaymentInfo(plainText);
                 } else {
                     // 记录退款日志
-                    updateRefund(plainText);
+                    refundInfoService.updateRefund(plainText);
                 }
                 log.info("订单状态更新成功");
             } finally {
@@ -355,7 +280,7 @@ public class WxPayNative implements IPayMode {
     /**
      * 用户取消订单
      *
-     * @param orderNo    订单号
+     * @param orderNo 订单号
      * @throws Exception 抛出异常
      */
     @Override
@@ -391,7 +316,7 @@ public class WxPayNative implements IPayMode {
 
         try {
             // 使用sendRequest方法发送请求并获取结果
-            sendRequest(url, paramsMap, CLOSE_ORDER);
+            sendRequest(wxPayClient, url, paramsMap, CLOSE_ORDER);
         } catch (IOException e) {
             throw new Exception("关闭订单失败，订单号：" + orderNo, e);
         }
@@ -427,7 +352,7 @@ public class WxPayNative implements IPayMode {
         Map paramsMap = new HashMap();
         paramsMap.put("out_trade_no", orderNo);
         paramsMap.put("out_refund_no", refundsInfo.getRefundNo());
-        paramsMap.put("reason",reason);
+        paramsMap.put("reason", reason);
         paramsMap.put("notify_url", wxPayConfig.getNotifyDomain().concat(WxNotifyType.REFUND_NOTIFY.getType()));
 
         /**
@@ -447,7 +372,7 @@ public class WxPayNative implements IPayMode {
 
         // 调用sendRequest方法发送请求并处理结果
         try {
-            Map<String, String> responseResult = sendRequest(url, paramsMap, "退款");
+            Map<String, String> responseResult = sendRequest(wxPayClient, url, paramsMap, "退款");
             // 更新订单状态为正在处理退款
             orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_PROCESSING);
 
@@ -456,109 +381,9 @@ public class WxPayNative implements IPayMode {
             // 将Map转换为Json字符串
             String jsonContent = gson.toJson(responseResult);
             // 传入Json字符串
-            updateRefund(jsonContent);
+            refundInfoService.updateRefund(jsonContent);
         } catch (IOException e) {
             throw new RuntimeException("退款异常", e);
         }
     }
-
-    /**
-     * 根据提供的JSON内容更新对应的退款记录
-     *
-     * @param content JSON格式的退款记录信息
-     */
-    public void updateRefund(String content) {
-        //将json字符串转换成Map
-        Gson gson = new Gson();
-        Map<String, String> resultMap = gson.fromJson(content, HashMap.class);
-        System.out.println(resultMap);
-
-        //构建查询条件
-        QueryWrapper<RefundInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("refund_no", resultMap.get("out_refund_no"));
-
-        //创建并初始化要更新的退款记录信息
-        RefundInfo refundInfo = new RefundInfo();
-        refundInfo.setRefundId(resultMap.get("refund_id"));
-
-        //查询退款和申请退款中的返回参数
-        if (resultMap.get("status") != null) {
-            refundInfo.setRefundStatus(resultMap.get("status"));
-            refundInfo.setContentReturn(content);
-        }
-        //退款回调中的回调参数
-        if (resultMap.get("refund_status") != null) {
-            refundInfo.setRefundStatus(resultMap.get("refund_status"));
-            refundInfo.setContentNotify(content);
-        }
-
-        //更新数据库中的退款记录
-        refundInfoMapper.update(refundInfo, queryWrapper);
-    }
-
-    /**
-     * 获取申请退款超过指定分钟数但还未成功的退款订单
-     *
-     * @param minutes 指定的分钟数
-     * @return 未成功的退款订单列表
-     */
-    public List<RefundInfo> getNoRefundOrderByDuration(int minutes) {
-        //计算出minutes分钟之前的时间点
-        Instant instant = Instant.now().minus(Duration.ofMinutes(minutes));
-
-        //构建查询条件
-        QueryWrapper<RefundInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("refund_status", WxRefundStatus.PROCESSING.getType());
-        queryWrapper.le("create_time", instant);
-
-        //查询并返回结果
-        return refundInfoMapper.selectList(queryWrapper);
-    }
-
-    /**
-     * 处理退款单
-     *
-     * @param bodyMap 请求体Map，包含了微信通知的退款信息
-     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
-     */
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception {
-
-        // 打印日志：开始处理退款单通知
-        log.info("处理退款单通知");
-
-        // 从请求体中解密得到明文信息
-        String plainText = decryptFromResource(bodyMap);
-
-        // 使用Gson将明文信息转化为Map形式
-        Gson gson = new Gson();
-        HashMap plainTextMap = gson.fromJson(plainText, HashMap.class);
-
-        // 获取订单号
-        String orderNo = (String) plainTextMap.get("out_trade_no");
-
-        // 尝试获取锁，防止多线程下对同一订单的同时操作
-        if (lock.tryLock()) {
-            try {
-                // 查询订单状态
-                String orderStatus = orderInfoService.getOrderStatus(orderNo);
-
-                // 如果订单不在退款处理中，则无需进行后续操作
-                if (!OrderStatus.REFUND_PROCESSING.getType().equals(orderStatus)) {
-                    return;
-                }
-
-                // 更新订单状态为退款成功
-                orderInfoService.updateStatusByOrderNo(orderNo, successStatus);
-
-                // 更新退款信息
-                updateRefund(plainText);
-            } finally {
-                // 确保最后释放锁
-                lock.unlock();
-            }
-        }
-    }
-
 }
