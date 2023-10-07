@@ -38,7 +38,7 @@ public class PayFactory {
     * @param type 支付类型，可以是支付宝APP支付、微信APP支付或者微信H5支付
     * @return 返回对应的支付实例，如果支付类型不符合要求，则返回null
     */
-   public PayBridge createPay(int type) {
+   public AbstractPay createPay(int type) {
       switch (type) {
          case ALI_PAY_NATIVE:
             AliPayNative aliPayNative = applicationContext.getBean(AliPayNative.class);

@@ -1,7 +1,7 @@
 package cn.nfsn.transaction.controller;
 
 import cn.nfsn.common.core.domain.R;
-import cn.nfsn.transaction.bridge.PayBridge;
+import cn.nfsn.transaction.bridge.AbstractPay;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
 import cn.nfsn.transaction.model.dto.CancelOrderDTO;
@@ -33,7 +33,7 @@ public class AliPayController {
     @Resource
     private PayFactory payFactory;
 
-    private PayBridge aliPayNative;
+    private AbstractPay aliPayNative;
 
     /**
      * 使用@PostConstruct注解来初始化aliPayNative
@@ -77,7 +77,7 @@ public class AliPayController {
         log.info("支付通知接口被调用");
 
         try {
-            aliPayNative.handlePaymentNotification(request, OrderStatus.NOTPAY);
+            aliPayNative.paymentNotificationHandler(request, OrderStatus.SUCCESS);
             return "success";
         } catch (Exception e) {
             log.error(e.getMessage(), e);
