@@ -24,8 +24,7 @@ import javax.annotation.Resource;
 
 import static cn.nfsn.common.core.enums.ResultCode.*;
 import static cn.nfsn.transaction.constant.OrderConstant.*;
-import static cn.nfsn.transaction.constant.RabbitConstant.ORDER_CLOSE_DELAY_ROUTING_KEY;
-import static cn.nfsn.transaction.constant.RabbitConstant.ORDER_EXCHANGE;
+import static cn.nfsn.transaction.constant.RabbitConstant.*;
 
 
 /**
@@ -123,7 +122,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
                 // 发送延迟消息到RabbitMQ
                 rabbitTemplate.convertAndSend(
                         ORDER_EXCHANGE,
-                        ORDER_CLOSE_DELAY_ROUTING_KEY,
+                        ORDER_QUEUE_ROUTING_KEY,
                         orderInfo.getOrderNo()
                 );
                 log.info("订单创建成功，并已发送延迟消息，订单号：{}", orderInfo.getOrderNo());
