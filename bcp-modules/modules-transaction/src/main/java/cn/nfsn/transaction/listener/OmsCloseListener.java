@@ -7,13 +7,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.*;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 
 import static cn.nfsn.transaction.constant.RabbitConstant.*;
-
-import java.io.IOException;
 
 /**
  * @ClassName: OmsCloseListener
@@ -29,6 +29,9 @@ public class OmsCloseListener {
     @Resource
     private OrderInfoService orderInfoService;
 
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
     /**
      * 监听延迟队列的消息。如果在指定时间内未被消费，则转发到死信交换机。
      *
@@ -40,21 +43,42 @@ public class OmsCloseListener {
     @RabbitListener(bindings =
             {
                     @QueueBinding(
-                            value = @Queue(value = ORDER_CLOSE_DELAY_DEAD_QUEUE,
+                            value = @Queue(value = ORDER_QUEUE,
                                     arguments =
                                             {
                                                     @Argument(name = "x-dead-letter-exchange", value = ORDER_DLX_EXCHANGE),
-                                                    @Argument(name = "x-dead-letter-routing-key", value = ORDER_CLOSE_ROUTING_KEY),
-                                                    @Argument(name = "x-message-ttl", value = "" + ORDER_EXPIRE_TIME, type = "java.lang.Long")
+                                                    @Argument(name = "x-dead-letter-routing-key", value = ORDER_DLQ_ROUTING_KEY),
+                                                    @Argument(name = "x-message-ttl", value = "#{T(java.lang.Long).toString(10000)}")
                                             }),
                             exchange = @Exchange(value = ORDER_EXCHANGE),
-                            key = {ORDER_CLOSE_DELAY_ROUTING_KEY}
+                            key = {ORDER_QUEUE_ROUTING_KEY}
                     )
             }, ackMode = "MANUAL"
     )
     public void handleOrderCloseDelay(String orderSn, Message message, Channel channel) throws IOException {
         log.info("订单({})延时队列，10s内如果未支付将路由到关单队列", orderSn);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
+
+        try {
+            // 判断订单是否已支付，如果已支付，则不做任何操作；
+            if (orderInfoService.getOrderStatus(orderSn).equals(OrderStatus.SUCCESS.getType())) {
+                log.info("订单({})已支付，不做任何操作", orderSn);
+                channel.basicAck(deliveryTag, false);
+            } else {
+                // 如果订单未支付，那么转发消息到死信交换机
+                rabbitTemplate.convertAndSend(
+                        ORDER_DLX_EXCHANGE,
+                        ORDER_DLQ_ROUTING_KEY,
+                        orderSn
+                );
+                log.info("订单({})未支付, 消息已转发到死信交换机", orderSn);
+                channel.basicAck(deliveryTag, false);
+            }
+        } catch (Exception e) {
+            log.error("处理订单({})失败，原因：{}", orderSn, e.getMessage());
+            // 拒绝消息，并将其放回队列
+            channel.basicReject(deliveryTag, true);
+        }
     }
 
     /**
@@ -67,9 +91,9 @@ public class OmsCloseListener {
      */
     @RabbitListener(bindings = {
             @QueueBinding(
-                    value = @Queue(value = ORDER_CLOSE_PROCESS_QUEUE, durable = "true"),
+                    value = @Queue(value = ORDER_DLQ_QUEUE, durable = "true"),
                     exchange = @Exchange(value = ORDER_DLX_EXCHANGE),
-                    key = {ORDER_CLOSE_ROUTING_KEY}
+                    key = {ORDER_DLQ_ROUTING_KEY}
             )
     }, ackMode = "MANUAL"
     )
@@ -78,7 +102,7 @@ public class OmsCloseListener {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         try {
             // 在更新订单状态之前先检查当前订单的状态，如果已经支付成功，则不做任何操作；
-            if(orderInfoService.getOrderStatus(orderSn).equals(OrderStatus.SUCCESS.getType())) {
+            if (orderInfoService.getOrderStatus(orderSn).equals(OrderStatus.SUCCESS.getType())) {
                 log.info("订单({})已支付，不做任何操作", orderSn);
                 channel.basicAck(deliveryTag, false);
                 return;
