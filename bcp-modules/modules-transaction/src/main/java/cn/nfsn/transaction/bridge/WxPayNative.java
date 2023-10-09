@@ -39,7 +39,7 @@ import static cn.nfsn.transaction.constant.WxPayConstant.*;
 import static cn.nfsn.transaction.utils.WxPayUtils.sendRequest;
 
 /**
- * @ClassName: WxPayStrategy
+ * @ClassName: WxPayNative
  * @Description: 微信支付策略
  * @Author: atnibamaitay
  * @CreateTime: 2023/9/8 0008 13:33
