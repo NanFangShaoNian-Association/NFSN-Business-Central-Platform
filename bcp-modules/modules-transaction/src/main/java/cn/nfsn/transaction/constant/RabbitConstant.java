@@ -10,22 +10,12 @@ public class RabbitConstant {
     /**
      * 普通延迟队列名称
      */
-    public static final String ORDER_CLOSE_DELAY_DEAD_QUEUE = "order.close.delay.dead.queue";
+    public static final String ORDER_QUEUE = "order.delay.queue";
 
     /**
      * 延迟队列路由键
      */
-    public static final String ORDER_CLOSE_DELAY_ROUTING_KEY = "order.close.delay";
-
-    /**
-     * 订单延迟交换机前缀
-     */
-    public static final String ORDER_DELAY_EXCHANGE = "order.delay.exchange";
-
-    /**
-     * 订单延迟路由键前缀
-     */
-    public static final String ORDER_DELAY_ROUTING_KEY = "order.delay.routingKey";
+    public static final String ORDER_QUEUE_ROUTING_KEY = "order.queue.routingKey";
 
     /**
      * 交换机名称
@@ -35,7 +25,7 @@ public class RabbitConstant {
     /**
      * 死信队列名称
      */
-    public static final String ORDER_CLOSE_PROCESS_QUEUE = "order.close.process.queue";
+    public static final String ORDER_DLQ_QUEUE = "order.dlq.queue";
 
     /**
      * 死信交换机名称
@@ -45,10 +35,12 @@ public class RabbitConstant {
     /**
      * 关闭订单路由键
      */
-    public static final String ORDER_CLOSE_ROUTING_KEY = "order.close";
+    public static final String ORDER_DLQ_ROUTING_KEY = "order.dlq.routingKey";
 
     /**
      * 订单超时时间：30分钟
      */
     public static final long ORDER_EXPIRE_TIME = 30 * 60 * 1000;
+    //测试使用：10s
+    //public static final long ORDER_EXPIRE_TIME = 10 * 1000;
 }

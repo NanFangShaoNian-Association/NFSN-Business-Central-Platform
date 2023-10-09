@@ -19,7 +19,7 @@ import static cn.nfsn.transaction.constant.RabbitConstant.*;
  * @ClassName: OrderRabbitConfig
  * @Description: 订单相关的RabbitMQ配置类，包含了创建交换机、队列、绑定关系和消息转换器等操作。
  * @Author: atnibamaitay
- * @CreateTime: 2023-09-26 15:40
+ * @CreateTime: 2023/09/20 15:50
  **/
 @Component
 @Slf4j
@@ -48,7 +48,7 @@ public class OrderRabbitConfig {
     }
 
     /**
-     * 创建一个带有过期时间、死信交换机和死信路由键的持久化延时队列ORDER_CLOSE_DELAY_DEAD_QUEUE。
+     * 创建一个带有过期时间、死信交换机和死信路由键的持久化延时队列ORDER_QUEUE。
      * 当队列中的消息超过设定的过期时间后，这些消息会被发送到指定的死信交换机并使用设定的死信路由键进行路由。
      *
      * @return Queue
@@ -59,11 +59,11 @@ public class OrderRabbitConfig {
         // 设置死信交换机
         args.put("x-dead-letter-exchange", ORDER_DLX_EXCHANGE);
         // 设置死信路由Key
-        args.put("x-dead-letter-routing-key", ORDER_CLOSE_ROUTING_KEY);
+        args.put("x-dead-letter-routing-key", ORDER_DLQ_ROUTING_KEY);
         // 设置消息过期时间
         args.put("x-message-ttl", ORDER_EXPIRE_TIME);
-        log.info("延时队列(order.close.delay.queue)创建");
-        return new Queue(ORDER_CLOSE_DELAY_DEAD_QUEUE, true, false, false, args);
+        log.info("延时队列(order.delay.queue)创建");
+        return new Queue(ORDER_QUEUE, true, false, false, args);
     }
 
     /**
@@ -74,20 +74,20 @@ public class OrderRabbitConfig {
      */
     @Bean
     public Binding orderDelayQueueBinding() {
-        return new Binding(ORDER_CLOSE_DELAY_DEAD_QUEUE, Binding.DestinationType.QUEUE, ORDER_EXCHANGE,
-                ORDER_CLOSE_DELAY_ROUTING_KEY, null);
+        return new Binding(ORDER_QUEUE, Binding.DestinationType.QUEUE, ORDER_EXCHANGE,
+                ORDER_QUEUE_ROUTING_KEY, null);
     }
 
     /**
-     * 创建一个名为ORDER_CLOSE_PROCESS_QUEUE的持久化死信队列，用于接收延时队列的过期消息。
+     * 创建一个名为ORDER_DLQ_QUEUE的持久化死信队列，用于接收延时队列的过期消息。
      * 当消息在延时队列中过期后，会被转发到此死信队列进行处理。
      *
      * @return Queue
      */
     @Bean
     public Queue orderCloseQueue() {
-        log.info("死信队列(order.close.queue)创建");
-        return new Queue(ORDER_CLOSE_PROCESS_QUEUE, true, false, false);
+        log.info("死信队列(order.dlq.queue)创建");
+        return new Queue(ORDER_DLQ_QUEUE, true, false, false);
     }
 
     /**
@@ -98,8 +98,8 @@ public class OrderRabbitConfig {
      */
     @Bean
     public Binding orderCloseQueueBinding() {
-        return new Binding(ORDER_CLOSE_PROCESS_QUEUE, Binding.DestinationType.QUEUE, ORDER_DLX_EXCHANGE,
-                ORDER_CLOSE_ROUTING_KEY, null);
+        return new Binding(ORDER_DLQ_QUEUE, Binding.DestinationType.QUEUE, ORDER_DLX_EXCHANGE,
+                ORDER_DLQ_ROUTING_KEY, null);
     }
 
     /**
