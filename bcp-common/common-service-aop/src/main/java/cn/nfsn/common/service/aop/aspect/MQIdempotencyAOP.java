@@ -51,7 +51,7 @@ public class MQIdempotencyAOP {
         MqMessage mqMessage = findMqMessageParameter(args);
 
         // 如果没有找到MqMessage参数，则记录日志并返回null
-        if(Objects.isNull(mqMessage)){
+        if (Objects.isNull(mqMessage)) {
             // log 消息投递失败
             return null;
         }
@@ -64,16 +64,16 @@ public class MQIdempotencyAOP {
         RLock lock = RedisLock.getLock(redissonClient, lockKey);
 
         // 尝试获取锁，最多等待3秒，锁有效期300秒
-        boolean res = RedisLock.lock(lock,3,300);
+        boolean res = RedisLock.lock(lock, 3, 300);
 
         // 若未能获取到锁，抛出服务器繁忙的系统异常
-        if(!res) {
+        if (!res) {
             throw new SystemServiceException(ResultCode.SERVER_BUSY);
         }
 
         // 从缓存中获取幂等性标识
         Optional<String> cacheValue = Optional.ofNullable(
-                redisCache.getCacheObject(CacheConstants.MQ_IDEMPOTENCY+mqMessage.getMessageKey()));
+                redisCache.getCacheObject(CacheConstants.MQ_IDEMPOTENCY + mqMessage.getMessageKey()));
 
         // 若缓存中没有幂等性标识，说明是首次提交
         if (!cacheValue.isPresent()) {
@@ -85,12 +85,12 @@ public class MQIdempotencyAOP {
                 MethodSignature signature = (MethodSignature) pjp.getSignature();
 
                 // 获取当前方法上的@MQIdempotency注解
-                MQIdempotency  idempotency = signature.getMethod().getAnnotation(MQIdempotency.class);
+                MQIdempotency idempotency = signature.getMethod().getAnnotation(MQIdempotency.class);
 
                 // 在缓存中设置幂等性标识，有效期为idempotency.expire()
                 // 默认300000毫秒内视为重复提交
                 redisCache.setCacheObject(
-                        CacheConstants.MQ_IDEMPOTENCY+mqMessage.getMessageKey(),
+                        CacheConstants.MQ_IDEMPOTENCY + mqMessage.getMessageKey(),
                         "待定",
                         idempotency.expire(),
                         TimeUnit.MILLISECONDS);
