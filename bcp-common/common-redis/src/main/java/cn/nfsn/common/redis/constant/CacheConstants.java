@@ -9,13 +9,17 @@ public class CacheConstants {
     /**
      * 冒号字符，常用于键的构造
      */
+    public static final String REDIS_SEPARATOR = ":";
+
+    /**
+     * MQ幂等前缀
+     */
     public static final String MQ_IDEMPOTENCY = "MQIdempotency:";
 
     /**
-     * 冒号字符，常用于键的构造
+     * 请求幂等前缀
      */
     public static final String REQ_IDEMPOTENCY = "ReqIdempotency:";
-
 
     /**
      * 默认等待时长 1 毫秒
