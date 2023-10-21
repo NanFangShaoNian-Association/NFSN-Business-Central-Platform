@@ -27,9 +27,8 @@ import static cn.nfsn.common.redis.constant.CacheConstants.*;
 @Component
 public class CacheUtil {
 
-    private final StringRedisTemplate stringRedisTemplate;
-
     private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    private final StringRedisTemplate stringRedisTemplate;
 
     public CacheUtil(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
@@ -42,10 +41,10 @@ public class CacheUtil {
     /**
      * 逻辑过期
      *
-     * @param key 键
+     * @param key   键
      * @param value 值
-     * @param time 先传时间值
-     * @param unit 再传单位，下面也一样
+     * @param time  先传时间值
+     * @param unit  再传单位，下面也一样
      */
     public void setWithLogicalExpire(String key, Object value, Long time, TimeUnit unit) {
         // 设置逻辑过期
@@ -59,19 +58,19 @@ public class CacheUtil {
     /**
      * 缓存穿透
      *
-     * @param keyPrefix 查redis时key的前缀
-     * @param id 根据id查数据库的时候用的，不过因为id的类型不确定，所以也用泛型
-     * @param type 要返回的类型
-     * @param dbFallback 需要调用者提供数据库查询的逻辑
-     * @param time 先传时间值
-     * @param unit 再传单位
-     * @param cacheNullTtl 缓存空值的存活时间，单位为分钟
+     * @param keyPrefix     查redis时key的前缀
+     * @param id            根据id查数据库的时候用的，不过因为id的类型不确定，所以也用泛型
+     * @param type          要返回的类型
+     * @param dbFallback    需要调用者提供数据库查询的逻辑
+     * @param time          先传时间值
+     * @param unit          再传单位
+     * @param cacheNullTtl  缓存空值的存活时间，单位为分钟
      * @param cacheNullUnit 缓存空值的存活时间单位
      * @param <R>
      * @param <ID>
      * @return
      */
-    public <R,ID> R queryWithPassThrough(
+    public <R, ID> R queryWithPassThrough(
             String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit, long cacheNullTtl, TimeUnit cacheNullUnit) {
         String key = keyPrefix + id;
         // 1.从redis查询
@@ -93,14 +92,14 @@ public class CacheUtil {
     /**
      * 逻辑过期解决缓存击穿
      *
-     * @param keyPrefix 查redis时key的前缀
-     * @param id 根据id查数据库的时候用的，不过因为id的类型不确定，所以也用泛型
-     * @param type 要返回的类型
-     * @param dbFallback 需要调用者提供数据库查询的逻辑
-     * @param time 先传时间值
-     * @param unit 再传单位
+     * @param keyPrefix   查redis时key的前缀
+     * @param id          根据id查数据库的时候用的，不过因为id的类型不确定，所以也用泛型
+     * @param type        要返回的类型
+     * @param dbFallback  需要调用者提供数据库查询的逻辑
+     * @param time        先传时间值
+     * @param unit        再传单位
      * @param lockTimeout 锁的超时时间
-     * @param lockUnit 锁的超时时间单位
+     * @param lockUnit    锁的超时时间单位
      * @param <R>
      * @param <ID>
      * @return
@@ -120,7 +119,7 @@ public class CacheUtil {
         R r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
         LocalDateTime expireTime = redisData.getExpireTime();
         // 5.判断是否过期
-        if(expireTime.isAfter(LocalDateTime.now())) {
+        if (expireTime.isAfter(LocalDateTime.now())) {
             // 5.1.未过期，直接返回信息
             return r;
         }
@@ -130,7 +129,7 @@ public class CacheUtil {
         String lockKey = LOCK_KEY + id;
         boolean isLock = tryLock(lockKey, lockTimeout, lockUnit);
         // 6.2.判断是否获取锁成功
-        if (isLock){
+        if (isLock) {
             // 6.3.成功，开启独立线程，实现缓存重建
             CACHE_REBUILD_EXECUTOR.submit(() -> {
                 try {
@@ -140,7 +139,7 @@ public class CacheUtil {
                     this.setWithLogicalExpire(key, newR, time, unit);
                 } catch (Exception e) {
                     log.error("Error while rebuilding cache", e);
-                }finally {
+                } finally {
                     // 释放锁
                     unlock(lockKey);
                 }
@@ -153,14 +152,14 @@ public class CacheUtil {
     /**
      * 互斥锁解决缓存击穿
      *
-     * @param keyPrefix 查redis时key的前缀
-     * @param id 根据id查数据库的时候用的，不过因为id的类型不确定，所以也用泛型
-     * @param type 要返回的类型
-     * @param dbFallback 需要调用者提供数据库查询的逻辑
-     * @param time 先传时间值
-     * @param unit 再传单位
+     * @param keyPrefix   查redis时key的前缀
+     * @param id          根据id查数据库的时候用的，不过因为id的类型不确定，所以也用泛型
+     * @param type        要返回的类型
+     * @param dbFallback  需要调用者提供数据库查询的逻辑
+     * @param time        先传时间值
+     * @param unit        再传单位
      * @param lockTimeout 锁的超时时间
-     * @param lockUnit 锁的超时时间单位
+     * @param lockUnit    锁的超时时间单位
      * @param <R>
      * @param <ID>
      * @return
@@ -211,13 +210,13 @@ public class CacheUtil {
     /**
      * 根据给定的键从数据库查询数据，并将其缓存在Redis中。
      *
-     * @param key         指定的key，用于在Redis中进行数据存储
-     * @param dbFallback  数据库查询功能接口，当Redis缓存中不存在数据时，会通过此接口进行数据库查询
-     * @param time        缓存数据的有效期长度
-     * @param unit        缓存数据的有效期单位
-     * @param id          数据库查询参数
-     * @param <R>         数据库查询结果类型
-     * @param <ID>        数据库查询参数类型
+     * @param key        指定的key，用于在Redis中进行数据存储
+     * @param dbFallback 数据库查询功能接口，当Redis缓存中不存在数据时，会通过此接口进行数据库查询
+     * @param time       缓存数据的有效期长度
+     * @param unit       缓存数据的有效期单位
+     * @param id         数据库查询参数
+     * @param <R>        数据库查询结果类型
+     * @param <ID>       数据库查询参数类型
      * @return 返回数据库查询的结果，如果没有查到数据，则返回null
      */
     private <R, ID> R queryAndCache(String key, Function<ID, R> dbFallback, Long time, TimeUnit unit, ID id) {
@@ -241,12 +240,12 @@ public class CacheUtil {
     /**
      * 尝试加锁
      *
-     * @param key 锁
+     * @param key     锁
      * @param timeout 超时时间
-     * @param unit 时间单位
+     * @param unit    时间单位
      * @return true=加锁成功；false=加锁失败
      */
-    private boolean tryLock(String key, long timeout, TimeUnit unit) {
+    public boolean tryLock(String key, long timeout, TimeUnit unit) {
         Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", timeout, unit);
         return BooleanUtil.isTrue(flag);
     }
@@ -257,7 +256,7 @@ public class CacheUtil {
      * @param key 锁
      * @return true=加锁成功；false=加锁失败
      */
-    private void unlock(String key) {
+    public void unlock(String key) {
         stringRedisTemplate.delete(key);
     }
 }
