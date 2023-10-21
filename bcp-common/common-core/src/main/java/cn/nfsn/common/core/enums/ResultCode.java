@@ -49,6 +49,7 @@ public enum ResultCode {
     AUTO_REGISTER_FILE(5002,"自动注册失败,请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR),
     SERVER_BUSY(5003,"服务器繁忙，请稍后重试", HttpStatus.TOO_MANY_REQUESTS),
     MESSAGE_SERVICE_ERROR(5004,"短信服务异常，请稍后重试", HttpStatus.INTERNAL_SERVER_ERROR),
+    SERVER_LIMIT(5005,"服务器已限流", HttpStatus.TOO_MANY_REQUESTS),
 
     /*订单相关错误：5501-6000*/
     PRODUCT_OR_PAY_TYPE_NULL(5501, "产品和付款类型不能为空或空", HttpStatus.BAD_REQUEST),
