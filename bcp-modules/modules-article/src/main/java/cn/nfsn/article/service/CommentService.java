@@ -1,10 +1,8 @@
 package cn.nfsn.article.service;
 
-import cn.nfsn.article.model.dto.CommentNodeDTO;
 import cn.nfsn.article.model.entity.Comment;
+import cn.nfsn.common.core.domain.R;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.util.List;
 
 /**
  * @ClassName: CommentService
@@ -15,13 +13,13 @@ import java.util.List;
 public interface CommentService extends IService<Comment> {
 
     /**
-     * 根据objectId、pageNum和pageSize构建评论树
+     * 根据对象ID获取评论
      *
-     * @param objectId 对象ID
-     * @param pageNum  当前页码
-     * @param pageSize 每页大小
-     * @return 评论节点列表
+     * @param objectId 对象的ID
+     * @param pageNum  页码
+     * @param pageSize 每页的数量
+     * @return R 评论结果
      */
-    List<CommentNodeDTO> buildCommentTree(Integer objectId, Integer pageNum, Integer pageSize);
+    R getCommentByObjectId(Integer objectId, Integer pageNum, Integer pageSize);
 
 }

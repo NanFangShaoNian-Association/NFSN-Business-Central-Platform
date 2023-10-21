@@ -1,10 +1,16 @@
 package cn.nfsn.article.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import cn.nfsn.article.constant.CommonCacheContant;
 import cn.nfsn.article.mapper.CommentMapper;
 import cn.nfsn.article.model.dto.CommentNodeDTO;
 import cn.nfsn.article.model.entity.Comment;
 import cn.nfsn.article.service.CommentService;
+import cn.nfsn.common.core.domain.R;
+import cn.nfsn.common.redis.utils.CacheUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -12,6 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static cn.nfsn.article.constant.CommonCacheContant.COMMENT_CACHE_PREFIX;
+import static cn.nfsn.article.constant.CommonCacheContant.COMMENT_REBUILD_LOCK_TTL;
+import static cn.nfsn.common.redis.constant.CacheConstants.LOCK_KEY;
+import static cn.nfsn.common.redis.constant.CacheConstants.REDIS_SEPARATOR;
 
 /**
  * @ClassName: CommentServiceImpl
@@ -23,8 +35,82 @@ import java.util.Map;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
         implements CommentService {
 
+    private final StringRedisTemplate stringRedisTemplate;
     @Resource
     private CommentMapper commentMapper;
+    @Resource
+    private CacheUtil cacheUtil;
+
+    public CommentServiceImpl(StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+
+    /**
+     * 根据对象ID获取评论
+     * 使用了互斥锁防止缓存击穿的思路
+     *
+     * @param objectId 对象的ID
+     * @param pageNum  页码
+     * @param pageSize 每页的数量
+     * @return R 评论结果
+     */
+    @Override
+    public R getCommentByObjectId(Integer objectId, Integer pageNum, Integer pageSize) {
+        // 用于存储评论的列表
+        List<CommentNodeDTO> commentNodeDTOList;
+
+        // 构造缓存键
+        // TODO:这里需要改成一个更合理的缓存键
+        String cacheKey = COMMENT_CACHE_PREFIX + pageNum + REDIS_SEPARATOR + pageSize + REDIS_SEPARATOR + objectId;
+
+        // 尝试从缓存中查询评论
+        String cacheJson = stringRedisTemplate.opsForValue().get(cacheKey);
+
+        // 缓存中存在评论
+        if (StrUtil.isNotBlank(cacheJson)) {
+            return JSONUtil.toBean(cacheJson, R.class);
+        }
+
+        // 判断是否命中空值
+        if (cacheJson != null) {
+            return null;
+        }
+
+        // 构建互斥锁键
+        // TODO:这里需要改成一个更合理的互斥锁键
+        String lockKey = LOCK_KEY + objectId + pageNum + pageSize;
+
+        while (true) {
+            try {
+                // 尝试获取互斥锁，防止缓存击穿
+                boolean isLock = cacheUtil.tryLock(lockKey, COMMENT_REBUILD_LOCK_TTL, TimeUnit.SECONDS);
+
+                // 成功获取锁
+                if (isLock) {
+                    // 从数据库中获取评论
+                    commentNodeDTOList = buildCommentTree(objectId, pageNum, pageSize);
+
+                    // 增添到缓存
+                    cacheUtil.set(cacheKey, commentNodeDTOList,
+                            CommonCacheContant.COMMENT_CACHE_TTL, TimeUnit.HOURS);
+
+                    // 成功获取数据后跳出循环
+                    break;
+                } else {
+                    // 获取锁失败，休眠一段时间后继续尝试
+                    Thread.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                log.error("尝试获取锁时发生中断异常", e);
+            } finally {
+                // 无论是否获取成功，最后都需要释放锁
+                cacheUtil.unlock(lockKey);
+            }
+        }
+
+        return R.ok(commentNodeDTOList);
+    }
+
 
     /**
      * 根据objectId、pageNum和pageSize构建评论树
@@ -34,8 +120,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment>
      * @param pageSize 每页大小
      * @return 评论节点列表
      */
-    @Override
-    public List<CommentNodeDTO> buildCommentTree(Integer objectId, Integer pageNum, Integer pageSize) {
+    private List<CommentNodeDTO> buildCommentTree(Integer objectId, Integer pageNum, Integer pageSize) {
 
         // 获取objectId对应的所有根评论
         List<Comment> rootCommentList = getRootCommentByObjectId(objectId, pageNum, pageSize);

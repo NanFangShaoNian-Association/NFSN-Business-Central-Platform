@@ -41,7 +41,7 @@ public class CommentController {
             @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam(value = "要检索的评论每一页的大小。", defaultValue = "10")
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        return R.ok(commentService.buildCommentTree(objectId, pageNum, pageSize));
+        return commentService.getCommentByObjectId(objectId, pageNum, pageSize);
     }
 
 }
