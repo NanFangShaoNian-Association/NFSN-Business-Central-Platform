@@ -10,21 +10,27 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**
- * @ClassName: IPayMode
- * @Description: 支付方式的接口，定义了创建订单的方法
+ * @InterfaceName: AbstractPay
+ * @Description: 支付方式的抽象类，定义了支付操作相关的诸多方法
  * @Author: atnibamaitay
- * @CreateTime: 2023-09-13 22:15
+ * @CreateTime: 2023/9/8 0008 13:22
  **/
-public interface IPayMode {
+public abstract class AbstractPay {
 
-   /**
-    * 创建订单
-    *
-    * @param productDTO 商品数据传输对象,包含商品相关信息
-    * @return           返回一个包含订单信息的Map对象
-    * @throws Exception 如果在创建订单过程中出现问题，将抛出异常
-    */
-   Object createOrder(ProductDTO productDTO) throws Exception;
+    protected IPayMode payMode;
+
+    public AbstractPay(IPayMode payMode) {
+        this.payMode = payMode;
+    }
+
+    /**
+     * 创建订单
+     *
+     * @param productDTO 商品信息
+     * @return           包含微信支付的订单二维码链接和订单号或者支付宝支付的HTML表单代码的Map
+     * @throws Exception 抛出异常
+     */
+    public abstract Object createOrder(ProductDTO productDTO) throws Exception;
 
     /**
      * 处理来自支付系统方的支付通知
@@ -35,15 +41,15 @@ public interface IPayMode {
      * @throws IOException               如果读取请求数据时出错
      * @throws GeneralSecurityException  如果在验证签名过程中出现安全异常
      */
-   ResponsePayNotifyDTO paymentNotificationHandler(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException;
+    public abstract ResponsePayNotifyDTO paymentNotificationHandler(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException;
 
-   /**
-    * 取消订单
-    *
-    * @param orderNo    订单号
-    * @throws Exception 抛出异常
-    */
-    void cancelOrder(String orderNo) throws Exception;
+    /**
+     * 取消订单
+     *
+     * @param orderNo    订单号
+     * @throws Exception 抛出异常
+     */
+    public abstract void cancelOrder(String orderNo) throws Exception;
 
     /**
      * 退款
@@ -53,5 +59,5 @@ public interface IPayMode {
      * @throws Exception 若退款过程中发生错误，则抛出异常
      */
     @Transactional(rollbackFor = Exception.class)
-    void refund(String orderNo, String reason) throws Exception;
+    public abstract void refund(String orderNo, String reason) throws Exception;
 }

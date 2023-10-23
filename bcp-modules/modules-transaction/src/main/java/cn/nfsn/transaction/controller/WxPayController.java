@@ -1,7 +1,7 @@
 package cn.nfsn.transaction.controller;
 
 import cn.nfsn.common.core.domain.R;
-import cn.nfsn.transaction.bridge.PayBridge;
+import cn.nfsn.transaction.bridge.AbstractPay;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.factory.PayFactory;
 import cn.nfsn.transaction.model.dto.ProductDTO;
@@ -54,7 +54,7 @@ public class WxPayController {
         log.info("发起支付请求 v3");
 
         // 使用工厂方法创建具体的支付方式实例
-        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+        AbstractPay wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         // 保存创建订单的结果
         Object result = null;
@@ -107,12 +107,12 @@ public class WxPayController {
     @PostMapping("/native/notify")
     public String nativeNotify(HttpServletRequest request, HttpServletResponse response) {
         // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
-        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+        AbstractPay wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         Gson gson = new Gson();
         try {
             // 调用拿到的实例进行处理
-            ResponsePayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.SUCCESS);
+            ResponsePayNotifyDTO result = wxPayNative.paymentNotificationHandler(request, OrderStatus.SUCCESS);
 
             // 根据返回结果设置响应状态，并返回相应消息
             if (SUCCESS_CODE.equals(result.getCode())) {
@@ -143,7 +143,7 @@ public class WxPayController {
     public R cancel(@PathVariable String orderNo) throws Exception {
 
         // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
-        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+        AbstractPay wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         // 记录日志，标记正在进行的操作为"取消订单"
         log.info("取消订单");
@@ -167,7 +167,7 @@ public class WxPayController {
     @PostMapping("/refunds/{orderNo}/{reason}")
     public R refunds(@PathVariable String orderNo, @PathVariable String reason) throws Exception {
         // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
-        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+        AbstractPay wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         // 记录日志信息，表示开始进行退款操作
         log.info("申请退款");
@@ -194,11 +194,11 @@ public class WxPayController {
         log.info("退款通知执行");
 
         // 通过工厂方法创建一个具体的支付方式实例，这里为微信原生支付
-        PayBridge wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
+        AbstractPay wxPayNative = payFactory.createPay(PayFactory.WX_PAY_NATIVE);
 
         try {
             // 调用拿到的实例进行处理
-            ResponsePayNotifyDTO result = wxPayNative.handlePaymentNotification(request, OrderStatus.REFUND_SUCCESS);
+            ResponsePayNotifyDTO result = wxPayNative.paymentNotificationHandler(request, OrderStatus.REFUND_SUCCESS);
 
             // 判断返回结果
             if (result.getCode().equals(SUCCESS_CODE)) {

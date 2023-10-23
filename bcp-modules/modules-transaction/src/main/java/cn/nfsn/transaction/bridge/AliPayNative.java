@@ -1,13 +1,11 @@
 package cn.nfsn.transaction.bridge;
 
-import cn.hutool.core.net.URLDecoder;
 import cn.nfsn.common.core.enums.ResultCode;
 import cn.nfsn.common.core.exception.AliPayException;
 import cn.nfsn.transaction.config.AlipayClientConfig;
 import cn.nfsn.transaction.enums.AliPayTradeState;
 import cn.nfsn.transaction.enums.OrderStatus;
 import cn.nfsn.transaction.enums.PayType;
-import cn.nfsn.transaction.mapper.RefundInfoMapper;
 import cn.nfsn.transaction.model.dto.AlipayBizContentDTO;
 import cn.nfsn.transaction.model.dto.ProductDTO;
 import cn.nfsn.transaction.model.dto.ResponsePayNotifyDTO;
@@ -16,19 +14,18 @@ import cn.nfsn.transaction.model.entity.RefundInfo;
 import cn.nfsn.transaction.service.OrderInfoService;
 import cn.nfsn.transaction.service.PaymentInfoService;
 import cn.nfsn.transaction.service.RefundInfoService;
+import cn.nfsn.transaction.utils.AliPayUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
-import com.alipay.api.internal.util.file.IOUtils;
 import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradeCloseResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -74,8 +71,6 @@ public class AliPayNative implements IPayMode {
     private AlipayClient alipayClient;
     @Resource
     private PaymentInfoService paymentInfoService;
-    @Resource
-    private RefundInfoMapper refundInfoMapper;
     @Resource
     private RefundInfoService refundInfoService;
 
@@ -160,15 +155,15 @@ public class AliPayNative implements IPayMode {
      * @throws GeneralSecurityException 如果签名验证失败，抛出安全异常
      */
     @Override
-    public ResponsePayNotifyDTO handlePaymentNotification(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
+    public ResponsePayNotifyDTO paymentNotificationHandler(HttpServletRequest request, OrderStatus successStatus) throws IOException, GeneralSecurityException {
         // 从请求中解析参数
-        Map<String, String> params = parseParamsFromRequest(request);
+        Map<String, String> params = AliPayUtils.parseParamsFromRequest(request);
 
         // 验证签名
         validateSign(params);
 
         // 获取并存储订单号
-        String outTradeNo = getStringParam(params, OUT_TRADE_NO);
+        String outTradeNo = AliPayUtils.getStringParam(params, OUT_TRADE_NO);
 
         // 获取并验证订单信息
         OrderInfo order = getAndValidateOrder(outTradeNo);
@@ -195,24 +190,6 @@ public class AliPayNative implements IPayMode {
         processOrder(paramsObject, successStatus);
 
         return null;
-    }
-
-    /**
-     * 从请求中解析参数。
-     *
-     * @param request HttpServletRequest对象，用于获取请求参数等信息
-     * @return 返回值为一个Map，键和值都是字符串类型
-     * @throws IOException 如果从request中读取参数出现异常
-     */
-    private Map<String, String> parseParamsFromRequest(HttpServletRequest request) throws IOException {
-        String paramsStr = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
-        try {
-            return Arrays.stream(paramsStr.split("&"))
-                    .map(this::splitQueryParameter)
-                    .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
-        } catch (Exception e) {
-            throw new RuntimeException("Error parsing params: " + paramsStr, e);
-        }
     }
 
     /**
@@ -256,7 +233,7 @@ public class AliPayNative implements IPayMode {
      * @param order  订单信息
      */
     private void validateAmount(Map<String, String> params, OrderInfo order) {
-        String totalAmount = getStringParam(params, TOTAL_AMOUNT);
+        String totalAmount = AliPayUtils.getStringParam(params, TOTAL_AMOUNT);
         int totalAmountInt = new BigDecimal(totalAmount).multiply(new BigDecimal("100")).intValue();
         int totalFeeInt = order.getTotalFee().intValue();
         if (totalAmountInt != totalFeeInt) {
@@ -270,7 +247,7 @@ public class AliPayNative implements IPayMode {
      * @param params 包含了所有需要验证的参数
      */
     private void validateSellerId(Map<String, String> params) {
-        String sellerId = getStringParam(params, SELLER_ID);
+        String sellerId = AliPayUtils.getStringParam(params, SELLER_ID);
         if (!sellerId.equals(config.getSellerId())) {
             throw new AliPayException(ResultCode.INSERT_ORDER_FAIL);
         }
@@ -282,7 +259,7 @@ public class AliPayNative implements IPayMode {
      * @param params 包含了所有需要验证的参数
      */
     private void validateAppId(Map<String, String> params) {
-        String appId = getStringParam(params, APP_ID);
+        String appId = AliPayUtils.getStringParam(params, APP_ID);
         if (!appId.equals(config.getAppId())) {
             throw new AliPayException(ResultCode.PRODUCT_OR_PAY_TYPE_NULL);
         }
@@ -294,55 +271,10 @@ public class AliPayNative implements IPayMode {
      * @param params 包含了所有需要验证的参数
      */
     private void validateTradeStatus(Map<String, String> params) {
-        String tradeStatus = getStringParam(params, TRADE_STATUS);
+        String tradeStatus = AliPayUtils.getStringParam(params, TRADE_STATUS);
         if (!"TRADE_SUCCESS".equals(tradeStatus)) {
             throw new AliPayException(ResultCode.ORDER_PAYING);
         }
-    }
-
-    /**
-     * 获取指定键的参数值。
-     *
-     * @param params 包含了所有需要验证的参数
-     * @param key    需要获取值的键
-     * @return 返回对应键的值，如果没有找到则抛出异常
-     */
-    private String getStringParam(Map<String, String> params, String key) {
-        String value = params.get(key);
-        if (value == null) {
-            throw new RuntimeException("Missing required param: " + key);
-        }
-        return value;
-    }
-
-    /**
-     * 将查询参数字符串分割为键值对.
-     *
-     * @param it 查询参数字符串
-     * @return 键值对
-     */
-    private AbstractMap.SimpleEntry<String, String> splitQueryParameter(String it) {
-        final int idx = it.indexOf("=");
-        final String key = idx > 0 ? it.substring(0, idx) : it;
-        final String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
-        return new AbstractMap.SimpleEntry<>(
-                URLDecoder.decode(key, StandardCharsets.UTF_8),
-                URLDecoder.decode(value, StandardCharsets.UTF_8)
-        );
-    }
-
-    /**
-     * 将Map的值转化为字符串类型.
-     *
-     * @param params 参数
-     * @return 转换后的Map
-     */
-    private Map<String, String> convertParamsToStringKey(Map<String, Object> params) {
-        return params.entrySet().stream()
-                .collect(Collectors.toMap(
-                        e -> e.getKey(),
-                        e -> e.getValue() != null ? e.getValue().toString() : ""
-                ));
     }
 
     /**
@@ -351,8 +283,7 @@ public class AliPayNative implements IPayMode {
      * @param bodyMap 请求体Map
      * @throws GeneralSecurityException 抛出安全异常
      */
-    @Override
-    public void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException {
+    private void processOrder(Map<String, Object> bodyMap, OrderStatus successStatus) throws GeneralSecurityException {
         log.info("开始处理订单");
 
         Object orderNoObj = bodyMap.get(OUT_TRADE_NO);
@@ -380,10 +311,10 @@ public class AliPayNative implements IPayMode {
                 }
 
                 // 更新订单状态为成功
-                orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.SUCCESS);
+                orderInfoService.updateStatusByOrderNo(orderNo, successStatus);
 
                 // 更新支付日志
-                Map<String, String> bodyMapString = convertParamsToStringKey(bodyMap);
+                Map<String, String> bodyMapString = AliPayUtils.convertParamsToStringKey(bodyMap);
 
                 // 记录支付日志
                 paymentInfoService.createPaymentInfoForAliPay(bodyMapString);
@@ -494,7 +425,7 @@ public class AliPayNative implements IPayMode {
                 orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_SUCCESS);
 
                 // 更新退款单, 退款成功
-                updateRefundForAliPay(
+                refundInfoService.updateRefundForAliPay(
                         refundInfo.getRefundNo(),
                         response.getBody(),
                         AliPayTradeState.REFUND_SUCCESS.getType()
@@ -506,7 +437,7 @@ public class AliPayNative implements IPayMode {
                 orderInfoService.updateStatusByOrderNo(orderNo, OrderStatus.REFUND_ABNORMAL);
 
                 // 更新退款单, 退款失败
-                updateRefundForAliPay(
+                refundInfoService.updateRefundForAliPay(
                         refundInfo.getRefundNo(),
                         response.getBody(),
                         AliPayTradeState.REFUND_ERROR.getType()
@@ -516,43 +447,5 @@ public class AliPayNative implements IPayMode {
             e.printStackTrace();
             throw new RuntimeException("创建退款申请失败");
         }
-    }
-
-
-    /**
-     * 更新退款记录
-     *
-     * @param refundNo     退款单编号
-     * @param content      响应结果内容
-     * @param refundStatus 退款状态
-     */
-    private void updateRefundForAliPay(String refundNo, String content, String refundStatus) {
-
-        // 根据退款单编号构造查询条件
-        QueryWrapper<RefundInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(REFUND_NO, refundNo);
-
-        // 构造要修改的退款信息对象，并设置退款状态与响应结果内容
-        RefundInfo refundInfo = new RefundInfo();
-        refundInfo.setRefundStatus(refundStatus);
-        refundInfo.setContentReturn(content);
-
-        // TODO: 还需要记录退款单ID
-
-
-        // 使用查询条件和待更新的退款信息，进行退款记录的更新操作
-        refundInfoMapper.update(refundInfo, queryWrapper);
-    }
-
-
-    /**
-     * 处理退款单
-     *
-     * @param bodyMap 请求体Map，包含了支付宝通知的退款信息
-     * @throws Exception 抛出异常，包括但不限于解密错误、数据库操作失败等
-     */
-    @Override
-    public void processRefund(Map<String, Object> bodyMap, OrderStatus successStatus) throws Exception {
-
     }
 }
