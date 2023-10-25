@@ -6,6 +6,7 @@ import cn.nfsn.article.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import cn.nfsn.article.model.entity.Article;
 import cn.nfsn.article.mapper.ArticleMapper;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -22,6 +23,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>
     @Resource
     private ArticleMapper articleMapper;
 
+    @Resource
+    private MongoTemplate mongoTemplate;
+
     @Override
     public void publish(ArticleDTO articleDTO) {
         //获取文章标题和内容
@@ -35,7 +39,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>
         article.setContent(handledContent);
 
         //写入数据库
-        articleMapper.insert(article);
+//        articleMapper.insert(article);
+        mongoTemplate.insert(article);
     }
 }
 

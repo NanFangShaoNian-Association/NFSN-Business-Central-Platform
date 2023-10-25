@@ -1,0 +1,5 @@
+spring:
+  data:
+    mongodb:
+      host: 120.27.128.168
+      database: article_platform
