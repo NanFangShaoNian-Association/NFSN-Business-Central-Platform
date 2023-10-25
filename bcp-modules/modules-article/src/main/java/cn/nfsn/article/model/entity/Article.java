@@ -20,6 +20,11 @@ public class Article implements Serializable {
     private Integer articleId;
 
     /**
+     * 作者Id
+     */
+    private String authorId;
+
+    /**
      * 标题
      */
     private String title;
@@ -32,17 +37,17 @@ public class Article implements Serializable {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private long createTime;
 
     /**
      * 修改时间
      */
-    private Date updateTime;
+    private long updateTime;
 
     /**
      * 逻辑删除
      */
-    private Integer deleted;
+    private int deleted;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -53,6 +58,14 @@ public class Article implements Serializable {
 
     public void setArticleId(Integer articleId) {
         this.articleId = articleId;
+    }
+
+    public String getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(String authorId) {
+        this.authorId = authorId;
     }
 
     public String getTitle() {
@@ -71,20 +84,24 @@ public class Article implements Serializable {
         this.content = content;
     }
 
-    public Date getCreateTime() {
+    public long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
 
-    public Date getUpdateTime() {
+    public long getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Date updateTime) {
+    public void setUpdateTime(long updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public void setDeleted(int deleted) {
+        this.deleted = deleted;
     }
 
     public Integer getDeleted() {

@@ -14,5 +14,6 @@ public class Constants {
     public static final String FAIL_OPERA = "失败";
     public static final String USER_SERVICE = "user-service";
     public static final String DELAY_LOGOUT = "delay-logout";
+    public static final Integer RANDOM_LENGTH = 6;
 
 }

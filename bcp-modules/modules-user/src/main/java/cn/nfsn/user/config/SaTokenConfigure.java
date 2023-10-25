@@ -18,7 +18,6 @@ public class SaTokenConfigure implements WebMvcConfigurer {
         return new SaServletFilter()
                 .addInclude("/**")
                 .addExclude("/favicon.ico")
-//                .addExclude("/stomp/websocket/**")
                 .setAuth(obj -> {
                     // 校验 Same-Token 身份凭证     —— 以下两句代码可简化为：SaSameUtil.checkCurrentRequestToken();
                     String token = SaHolder.getRequest().getHeader(SaSameUtil.SAME_TOKEN);

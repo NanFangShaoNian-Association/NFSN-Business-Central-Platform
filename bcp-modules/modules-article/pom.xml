@@ -42,17 +42,15 @@
             <groupId>cn.nfsn</groupId>
             <artifactId>common-datasource</artifactId>
         </dependency>
-        <!-- SpringCloud Alibaba Nacos Config -->
+
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
-        <!--hutool 工具包-->
         <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>${hutool.version}</version>
+            <groupId>cn.nfsn</groupId>
+            <artifactId>common-redis</artifactId>
         </dependency>
 
         <dependency>

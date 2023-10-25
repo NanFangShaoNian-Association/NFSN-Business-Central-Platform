@@ -3,17 +3,19 @@ package cn.nfsn.common.security.handler;
 import cn.dev33.satoken.exception.*;
 import cn.nfsn.common.core.domain.R;
 import cn.nfsn.common.core.enums.ResultCode;
+import cn.nfsn.common.core.exception.RedisException;
 import cn.nfsn.common.core.exception.SystemServiceException;
 import cn.nfsn.common.core.exception.UserOperateException;
-import cn.nfsn.common.core.utils.StringUtils;
+import cn.nfsn.common.core.exception.WxPayException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -65,6 +67,32 @@ public class GlobalExceptionHandler {
         List<ObjectError> allErrors = e.getBindingResult().getAllErrors();
         String message = allErrors.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(";"));
         return R.fail(message);
+    }
+
+    /**
+     * Redis异常拦截
+     *
+     * @param e   RedisException异常对象
+     * @return 返回异常结果
+     */
+    @ExceptionHandler(RedisException.class)
+    @ResponseBody
+    public R redisExceptionHandler(RedisException e) {
+        log.error("出现RedisException异常：", e);
+        return R.fail(e.getResultCode(), null);
+    }
+
+    /**
+     * 微信支付异常拦截
+     *
+     * @param e   WxPayException异常对象
+     * @return 返回异常结果
+     */
+    @ExceptionHandler(WxPayException.class)
+    @ResponseBody
+    public R wxPayExceptionHandler(WxPayException e) {
+        log.error("出现WxPayException异常：", e);
+        return R.fail(e.getResultCode(), null);
     }
 
     /**
@@ -134,7 +162,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotPermissionException.class)
     @ResponseBody
     public R handlerException(NotPermissionException e) {
-        e.printStackTrace();
         return R.ok("缺少权限：" + e.getPermission());
     }
 
@@ -142,7 +169,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotRoleException.class)
     @ResponseBody
     public R handlerException(NotRoleException e) {
-        e.printStackTrace();
         return R.ok("缺少角色：" + e.getRole());
     }
 
@@ -150,7 +176,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotSafeException.class)
     @ResponseBody
     public R handlerException(NotSafeException e) {
-        e.printStackTrace();
         return R.ok("二级认证校验失败：" + e.getService());
     }
 
@@ -158,7 +183,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisableServiceException.class)
     @ResponseBody
     public R handlerException(DisableServiceException e) {
-        e.printStackTrace();
         return R.ok("当前账号 " + e.getService() + " 服务已被封禁 (level=" + e.getLevel() + ")：" + e.getDisableTime() + "秒后解封");
     }
 
@@ -166,9 +190,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotBasicAuthException.class)
     @ResponseBody
     public R handlerException(NotBasicAuthException e) {
-        e.printStackTrace();
         return R.ok(e.getMessage());
     }
+
     /**
      * 处理其他异常
      * @param e
@@ -177,7 +201,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value =Exception.class)
     @ResponseBody
     public R exceptionHandler(Exception e){
-        log.error("抛出服务器内部错误!:{}", e.getMessage());
+        log.error("出现Exception异常：", e);
         return R.fail(ResultCode.INTERNAL_ERROR);
     }
 }

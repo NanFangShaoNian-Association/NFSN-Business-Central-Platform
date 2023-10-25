@@ -4,6 +4,8 @@ import cn.nfsn.article.model.dto.ArticleDTO;
 import cn.nfsn.article.model.entity.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
 * @author huanghuiyuan
 * @description 针对表【article】的数据库操作Service
@@ -11,5 +13,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ArticleService extends IService<Article> {
 
-    void publish(ArticleDTO articleDTO);
+    void publish(String userId, ArticleDTO articleDTO);
+
+    Article selectArticleById(Integer articleId);
+
+    List<Article> selectMomentsOfUserByUserId(String userId);
 }

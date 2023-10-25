@@ -1,6 +1,6 @@
 package cn.nfsn.common.swagger.config;
 
-import cn.nfsn.common.core.constant.SwaggerConstants;
+import cn.nfsn.common.swagger.constant.SwaggerConstants;
 import io.swagger.annotations.Api;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

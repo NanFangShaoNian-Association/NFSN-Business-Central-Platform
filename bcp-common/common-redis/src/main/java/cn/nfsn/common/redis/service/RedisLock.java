@@ -7,31 +7,14 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static cn.nfsn.common.redis.constant.CacheConstants.*;
+
 public class RedisLock {
     private static final Logger log = LoggerFactory.getLogger(RedisLock.class);
- 
-    /**
-     * 默认等待时长 1 毫秒
-     */
-    private static final long DEF_WAIT_TIME = 1L;
- 
-    /**
-     * 默认过期时长 10 秒
-     */
-    private static final long DEF_EXPIRE_TIME = 1000 * 10L;
- 
-    /**
-     * 默认重试次数
-     */
-    private static final Integer NO_TRY_COUNT = 0;
-    /**
-     * 默认重试休眠时长
-     */
-    private static final Long NO_TRY_SLEEP_TIME = 0L;
- 
+
     private RedisLock() {
     }
- 
+
     /**
      * 获取分布式锁
      *
@@ -42,7 +25,7 @@ public class RedisLock {
     public static RLock getLock(RedissonClient redissonClient, String lockKey) {
         return redissonClient.getLock(lockKey);
     }
- 
+
     /**
      * 尝试加锁
      *
@@ -52,7 +35,7 @@ public class RedisLock {
     public static boolean lock(RLock lock) {
         return lock(lock, null);
     }
- 
+
     /**
      * 尝试加锁
      *
@@ -75,7 +58,7 @@ public class RedisLock {
     public static boolean lock(RLock lock, int tryCount, long sleepTime) {
         return lock(lock, DEF_WAIT_TIME, DEF_EXPIRE_TIME, tryCount, sleepTime,() -> true);
     }
- 
+
     /**
      * 尝试加锁
      *
@@ -88,7 +71,7 @@ public class RedisLock {
     public static boolean lock(RLock lock, int tryCount, long sleepTime, Supplier<Boolean> conditions) {
         return lock(lock, DEF_WAIT_TIME, DEF_EXPIRE_TIME, tryCount, sleepTime, conditions);
     }
- 
+
     /**
      * 尝试加锁
      *
@@ -129,7 +112,7 @@ public class RedisLock {
         }
         return result;
     }
- 
+
     /**
      * 释放锁
      *
@@ -141,5 +124,5 @@ public class RedisLock {
             lock.unlock();
         }
     }
- 
+
 }

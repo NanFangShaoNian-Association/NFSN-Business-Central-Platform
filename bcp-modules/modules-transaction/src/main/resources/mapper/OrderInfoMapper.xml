@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.nfsn.transaction.mapper.OrderInfoMapper">
+
+	<resultMap id="BaseResultMap" type="cn.nfsn.transaction.model.entity.OrderInfo">
+		<id property="id" column="id" jdbcType="BIGINT"/>
+		<result property="title" column="title" jdbcType="VARCHAR"/>
+		<result property="orderNo" column="order_no" jdbcType="VARCHAR"/>
+		<result property="userId" column="user_id" jdbcType="BIGINT"/>
+		<result property="productId" column="product_id" jdbcType="BIGINT"/>
+		<result property="totalFee" column="total_fee" jdbcType="INTEGER"/>
+		<result property="paymentData" column="payment_data" jdbcType="VARCHAR"/>
+		<result property="orderStatus" column="order_status" jdbcType="VARCHAR"/>
+		<result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+		<result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+		<result property="paymentType" column="payment_type" jdbcType="VARCHAR"/>
+		<result property="appId" column="app_id" jdbcType="INTEGER"/>
+		<result property="paymentCallBackUrl" column="payment_call_back_url" jdbcType="VARCHAR"/>
+		<result property="refundCallBackUrl" column="refund_call_back_url" jdbcType="VARCHAR"/>
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		id, title, order_no, user_id, product_id, total_fee,
+        payment_data, order_status, create_time, update_time,
+        payment_type, app_id, payment_notify_url, refund_notify_url
+	</sql>
+</mapper>

@@ -29,6 +29,10 @@ public class MqMessage implements Serializable {
         this.messageBody = messageBody;
     }
 
+    public MqMessage(String messageBody) {
+        this.messageBody = messageBody;
+    }
+
     public MqMessage() {
     }
 

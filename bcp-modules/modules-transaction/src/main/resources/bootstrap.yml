@@ -1,0 +1,27 @@
+server:
+  port: 8066
+spring:
+  application:
+    name: modules-transaction
+  profiles:
+    # 环境配置
+    active: dev
+  cloud:
+    nacos:
+      server-addr: 39.108.67.16:8848
+      config:
+        # 配置中心地址
+        server-addr: 39.108.67.16:8848
+        # 配置文件格式
+        file-extension: yml
+        extension-configs:
+          - dataId: bcp-modules-transaction-application-dev.yml
+            group: DEFAULT_GROUP
+          - dataId: bcp-modules-transaction-pay-dev.yml
+            group: DEFAULT_GROUP
+        # 共享配置
+        shared-configs:
+          - dataId: bcp-share-application-dev.yml
+            group: DEFAULT_GROUP
+        # 命名空间
+        namespace: 09b73c2d-c1c4-441f-96da-ca528338c42a

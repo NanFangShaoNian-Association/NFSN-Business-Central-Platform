@@ -1,13 +1,9 @@
 package cn.nfsn.common.core.domain;
 
-import cn.nfsn.common.core.utils.ValidatorUtil;
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -36,23 +32,7 @@ public class UserInfo implements Serializable {
     /**
      * 头像-默认（固定默认头像）
      */
-    @NotNull(message = "头像获取失败")
-    @NotBlank(message = "头像获取失败")
     private String userAvatar;
-
-    /**
-     * 邮箱
-     */
-//    @Pattern(regexp = ValidatorUtil.REGEX_EMAIL,message = "请输入正确邮箱")
-    private String email;
-
-    /**
-     * 手机号-唯一
-     */
-    @NotNull(message = "手机号不能为空")
-    @NotBlank(message = "手机号不能为空")
-    @Pattern(regexp = ValidatorUtil.REGEX_MOBILE,message = "请输入正确手机号")
-    private String phoneNumber;
 
     /**
      * 用户简介
@@ -97,21 +77,16 @@ public class UserInfo implements Serializable {
     /**
      * 最后一次上线时间
      */
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private Date loginLastTime;
 
     /**
      * 最后一次下线时间
      */
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private Date offLineLastTime;
 
     /**
      * 最后一次登录ip
      */
-//    @Pattern(regexp = ValidatorUtil.REGEX_IP_ADDR,message = "IP获取错误")
     private String loginLastTimeIp;
 
     /**
@@ -127,9 +102,6 @@ public class UserInfo implements Serializable {
     /**
      * 账号注册时间-非空
      */
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
-    @TableField(fill = FieldFill.INSERT)
     private Date userRegistTime;
 
     /**
@@ -140,10 +112,22 @@ public class UserInfo implements Serializable {
     /**
      * 更新日期
      */
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
-    @TableField(fill = FieldFill.UPDATE)
     private Date updateTime;
+
+    /**
+     * 用户注销标记：0-未注销，1-确认注销，2-取消注销
+     */
+    private Integer logoutStatus;
+
+    /**
+     * 1 STEAM课堂 2 北极星宠 3万象课堂
+     */
+    private String appCode;
+
+    /**
+     *
+     */
+    private Integer credentialsId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -202,34 +186,6 @@ public class UserInfo implements Serializable {
      */
     public void setUserAvatar(String userAvatar) {
         this.userAvatar = userAvatar;
-    }
-
-    /**
-     * 邮箱
-     */
-    public String getEmail() {
-        return email;
-    }
-
-    /**
-     * 邮箱
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * 手机号-唯一
-     */
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    /**
-     * 手机号-唯一
-     */
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
     }
 
     /**
@@ -459,11 +415,6 @@ public class UserInfo implements Serializable {
     /**
      * 用户注销标记：0-未注销，1-确认注销，2-取消注销
      */
-    private Integer logoutStatus;
-
-    /**
-     * 用户注销标记：0-未注销，1-确认注销，2-取消注销
-     */
     public Integer getLogoutStatus() {
         return logoutStatus;
     }
@@ -473,6 +424,34 @@ public class UserInfo implements Serializable {
      */
     public void setLogoutStatus(Integer logoutStatus) {
         this.logoutStatus = logoutStatus;
+    }
+
+    /**
+     * 1 STEAM课堂 2 北极星宠 3万象课堂
+     */
+    public String getAppCode() {
+        return appCode;
+    }
+
+    /**
+     * 1 STEAM课堂 2 北极星宠 3万象课堂
+     */
+    public void setAppCode(String appCode) {
+        this.appCode = appCode;
+    }
+
+    /**
+     *
+     */
+    public Integer getCredentialsId() {
+        return credentialsId;
+    }
+
+    /**
+     *
+     */
+    public void setCredentialsId(Integer credentialsId) {
+        this.credentialsId = credentialsId;
     }
 
     @Override
@@ -491,8 +470,6 @@ public class UserInfo implements Serializable {
                 && (this.getUserName() == null ? other.getUserName() == null : this.getUserName().equals(other.getUserName()))
                 && (this.getUserRole() == null ? other.getUserRole() == null : this.getUserRole().equals(other.getUserRole()))
                 && (this.getUserAvatar() == null ? other.getUserAvatar() == null : this.getUserAvatar().equals(other.getUserAvatar()))
-                && (this.getEmail() == null ? other.getEmail() == null : this.getEmail().equals(other.getEmail()))
-                && (this.getPhoneNumber() == null ? other.getPhoneNumber() == null : this.getPhoneNumber().equals(other.getPhoneNumber()))
                 && (this.getUserIntroduction() == null ? other.getUserIntroduction() == null : this.getUserIntroduction().equals(other.getUserIntroduction()))
                 && (this.getUserLocationProvince() == null ? other.getUserLocationProvince() == null : this.getUserLocationProvince().equals(other.getUserLocationProvince()))
                 && (this.getUserLocationCity() == null ? other.getUserLocationCity() == null : this.getUserLocationCity().equals(other.getUserLocationCity()))
@@ -509,7 +486,9 @@ public class UserInfo implements Serializable {
                 && (this.getUserRegistTime() == null ? other.getUserRegistTime() == null : this.getUserRegistTime().equals(other.getUserRegistTime()))
                 && (this.getUserStatus() == null ? other.getUserStatus() == null : this.getUserStatus().equals(other.getUserStatus()))
                 && (this.getUpdateTime() == null ? other.getUpdateTime() == null : this.getUpdateTime().equals(other.getUpdateTime()))
-                && (this.getLogoutStatus() == null ? other.getLogoutStatus() == null : this.getLogoutStatus().equals(other.getLogoutStatus()));
+                && (this.getLogoutStatus() == null ? other.getLogoutStatus() == null : this.getLogoutStatus().equals(other.getLogoutStatus()))
+                && (this.getAppCode() == null ? other.getAppCode() == null : this.getAppCode().equals(other.getAppCode()))
+                && (this.getCredentialsId() == null ? other.getCredentialsId() == null : this.getCredentialsId().equals(other.getCredentialsId()));
     }
 
     @Override
@@ -520,8 +499,6 @@ public class UserInfo implements Serializable {
         result = prime * result + ((getUserName() == null) ? 0 : getUserName().hashCode());
         result = prime * result + ((getUserRole() == null) ? 0 : getUserRole().hashCode());
         result = prime * result + ((getUserAvatar() == null) ? 0 : getUserAvatar().hashCode());
-        result = prime * result + ((getEmail() == null) ? 0 : getEmail().hashCode());
-        result = prime * result + ((getPhoneNumber() == null) ? 0 : getPhoneNumber().hashCode());
         result = prime * result + ((getUserIntroduction() == null) ? 0 : getUserIntroduction().hashCode());
         result = prime * result + ((getUserLocationProvince() == null) ? 0 : getUserLocationProvince().hashCode());
         result = prime * result + ((getUserLocationCity() == null) ? 0 : getUserLocationCity().hashCode());
@@ -539,6 +516,8 @@ public class UserInfo implements Serializable {
         result = prime * result + ((getUserStatus() == null) ? 0 : getUserStatus().hashCode());
         result = prime * result + ((getUpdateTime() == null) ? 0 : getUpdateTime().hashCode());
         result = prime * result + ((getLogoutStatus() == null) ? 0 : getLogoutStatus().hashCode());
+        result = prime * result + ((getAppCode() == null) ? 0 : getAppCode().hashCode());
+        result = prime * result + ((getCredentialsId() == null) ? 0 : getCredentialsId().hashCode());
         return result;
     }
 
@@ -552,8 +531,6 @@ public class UserInfo implements Serializable {
         sb.append(", userName=").append(userName);
         sb.append(", userRole=").append(userRole);
         sb.append(", userAvatar=").append(userAvatar);
-        sb.append(", email=").append(email);
-        sb.append(", phoneNumber=").append(phoneNumber);
         sb.append(", userIntroduction=").append(userIntroduction);
         sb.append(", userLocationProvince=").append(userLocationProvince);
         sb.append(", userLocationCity=").append(userLocationCity);
@@ -571,6 +548,8 @@ public class UserInfo implements Serializable {
         sb.append(", userStatus=").append(userStatus);
         sb.append(", updateTime=").append(updateTime);
         sb.append(", logoutStatus=").append(logoutStatus);
+        sb.append(", appCode=").append(appCode);
+        sb.append(", credentialsId=").append(credentialsId);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

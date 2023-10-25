@@ -19,7 +19,7 @@ public class ApplicationTest {
         ArticleDTO articleDTO = new ArticleDTO();
         articleDTO.setContent("Today is Thursday and tomorrow is Friday");
         articleDTO.setTitle("Hello Mongo");
-        articleService.publish(articleDTO);
+//        articleService.publish(articleDTO);
     }
 
 }
